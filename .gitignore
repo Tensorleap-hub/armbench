@@ -1,0 +1,18 @@
+.terraform*
+.idea/
+__pycache__/
+*.csv
+.python-version
+*secret.json
+*.h5
+requirements.txt
+*.gz
+examples/imdb/aclImdb/
+examples/coco/coco/coco_data/
+*.json
+examples/coco/.tensorleap/config.toml
+
+# armbench_segmentation
+/examples/armbench_segmentation/sandbox/
+/examples/armbench_segmentation/armbench_segmentation/dataset
+
