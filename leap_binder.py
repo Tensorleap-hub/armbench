@@ -33,8 +33,7 @@ def subset_images() -> List[PreprocessResponse]:
     """
     This function returns the training and validation datasets in the format expected by tensorleap
     """
-    dir_path = os.path.dirname(os.path.abspath(__file__))
-    local_filepath = os.path.join(dir_path, 'armbench_segmentation/dataset')
+    local_filepath = '/Users/chenrothschild/repo/Tensorleap-hub/armbench/armbench_segmentation/dataset'
     # initialize COCO api for instance annotations
     image_list = [img for img in os.listdir(os.path.join(local_filepath, 'images')) if img.endswith('.jpg')]
     train = COCO(os.path.join(local_filepath, 'train.json'))
@@ -60,8 +59,7 @@ def unlabeled_preprocessing_func() -> PreprocessResponse:
     """
     This function returns the unlabeled data split in the format expected by tensorleap
     """
-    dir_path = os.path.dirname(os.path.abspath(__file__))
-    local_filepath = os.path.join(dir_path, 'armbench_segmentation/dataset')
+    local_filepath = '/Users/chenrothschild/repo/Tensorleap-hub/armbench/armbench_segmentation/dataset'
     image_list = [img for img in os.listdir(os.path.join(local_filepath, 'images')) if img.endswith('.jpg')]
     val = COCO(os.path.join(local_filepath, 'val.json'))
     x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath, image_list=image_list)
@@ -79,8 +77,8 @@ def input_image(idx: int, data: PreprocessResponse) -> np.ndarray:
     """
     data = data.data
     x = data['samples'][idx]
-    dir_path = os.path.dirname(os.path.abspath(__file__))
-    local_filepath = os.path.join(dir_path, f"armbench_segmentation/dataset/images/{x['file_name']}")
+    local_filepath = f"/Users/chenrothschild/repo/Tensorleap-hub/armbench/armbench_segmentation/dataset/images/{x['file_name']}"
+
     # rescale
     image = np.array(
         Image.open(local_filepath).resize((CONFIG['IMAGE_SIZE'][0], CONFIG['IMAGE_SIZE'][1]), Image.BILINEAR)) / 255.

@@ -1,3 +1,6 @@
+codeIntegrationId: 64eb71f418fef000207c8738
+projectId: 64eb71ef18fef000207c8734
+secretManagerId: ""
 entryFile: leap_binder.py
 include:
     - leap_binder.py
