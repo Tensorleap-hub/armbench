@@ -33,16 +33,15 @@ def subset_images() -> List[PreprocessResponse]:
     """
     This function returns the training and validation datasets in the format expected by tensorleap
     """
-    remote_filepath = os.path.join(CONFIG['dir'], CONFIG['img_folder'], "train.json")
-    local_filepath = _download(remote_filepath)
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    local_filepath = os.path.join(dir_path, 'armbench_segmentation/dataset')
     # initialize COCO api for instance annotations
-    train = COCO(local_filepath)
-    x_train_raw = load_set(coco=train, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'])
+    image_list = [img for img in os.listdir(os.path.join(local_filepath, 'images/images')) if img.endswith('.jpg')]
+    train = COCO(os.path.join(local_filepath, 'train.json'))
+    x_train_raw = load_set(coco=train, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath, image_list=image_list)
 
-    remote_filepath = os.path.join(CONFIG['dir'], CONFIG['img_folder'], "test.json")
-    local_filepath = _download(remote_filepath)
-    val = COCO(local_filepath)
-    x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'])
+    val = COCO(os.path.join(local_filepath, 'test.json'))
+    x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath, image_list=image_list)
 
     train_size = min(len(x_train_raw), CONFIG['TRAIN_SIZE'])
     val_size = min(len(x_val_raw), CONFIG['VAL_SIZE'])
@@ -61,10 +60,11 @@ def unlabeled_preprocessing_func() -> PreprocessResponse:
     """
     This function returns the unlabeled data split in the format expected by tensorleap
     """
-    remote_filepath = os.path.join(CONFIG['dir'], CONFIG['img_folder'], "val.json")
-    local_filepath = _download(remote_filepath)
-    val = COCO(local_filepath)
-    x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'])
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    local_filepath = os.path.join(dir_path, 'armbench_segmentation/dataset')
+    image_list = [img for img in os.listdir(os.path.join(local_filepath, 'images/images')) if img.endswith('.jpg')]
+    val = COCO(os.path.join(local_filepath, 'val.json'))
+    x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath, image_list=image_list)
     val_size = min(len(x_val_raw), CONFIG['UL_SIZE'])
     np.random.seed(0)
     val_idx = np.random.choice(len(x_val_raw), val_size)
@@ -79,11 +79,11 @@ def input_image(idx: int, data: PreprocessResponse) -> np.ndarray:
     """
     data = data.data
     x = data['samples'][idx]
-    remote_path = f"{CONFIG['dir']}/{CONFIG['img_folder']}/images/{x['file_name']}"
-    local_path = _download(remote_path)
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    local_filepath = os.path.join(dir_path, f"armbench_segmentation/dataset/images/images/{x['file_name']}")
     # rescale
     image = np.array(
-        Image.open(local_path).resize((CONFIG['IMAGE_SIZE'][0], CONFIG['IMAGE_SIZE'][1]), Image.BILINEAR)) / 255.
+        Image.open(local_filepath).resize((CONFIG['IMAGE_SIZE'][0], CONFIG['IMAGE_SIZE'][1]), Image.BILINEAR)) / 255.
     return image
 
 

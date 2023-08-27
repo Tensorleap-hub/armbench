@@ -11,10 +11,13 @@ from armbench_segmentation.visualizers.visualizers import (
 from armbench_segmentation.visualizers.visualizers_getters import mask_visualizer_gt, mask_visualizer_prediction
 from leap_binder import (
     subset_images, input_image, get_bbs, get_masks, get_cat_instances_seg_lst, general_metrics_dict,
-    segmentation_metrics_dict, metadata_dict
+    segmentation_metrics_dict, metadata_dict, unlabeled_preprocessing_func
 )
 
+import json
+
 def check_integration():
+
     model_path = 'model/yolov5.h5'
     if not exists(model_path):
         os.makedirs('model', exist_ok=True)
@@ -26,6 +29,7 @@ def check_integration():
     batch = 64
     responses = subset_images()  # get dataset splits
     training_response = responses[0]  # [training, validation, test]
+    unlabeled_data = unlabeled_preprocessing_func()
     images = []
     bb_gt = []
     mask_gt =[]
