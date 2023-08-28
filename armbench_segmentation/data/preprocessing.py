@@ -1,5 +1,5 @@
 import os
-def load_set(coco, local_filepath, image_list, load_union=False):
+def load_set(coco, local_filepath, load_union=False):
     # get all images containing given categories
     CATEGORIES = []
     catIds = coco.getCatIds(CATEGORIES)  # Fetch class IDs only corresponding to the Classes
@@ -13,5 +13,6 @@ def load_set(coco, local_filepath, image_list, load_union=False):
         imgIds = list(imgIds)[:-1]  # we're missing the last image for some reason
     imgs = coco.loadImgs(imgIds)
 
+    image_list = [img for img in os.listdir(os.path.join(local_filepath, 'images')) if img.endswith('.jpg')]
     imgs = [img for img in imgs if img['file_name'] in image_list]
     return imgs

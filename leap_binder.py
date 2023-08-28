@@ -35,12 +35,11 @@ def subset_images() -> List[PreprocessResponse]:
     """
     local_filepath = '/Users/chenrothschild/repo/Tensorleap-hub/armbench/armbench_segmentation/dataset'
     # initialize COCO api for instance annotations
-    image_list = [img for img in os.listdir(os.path.join(local_filepath, 'images')) if img.endswith('.jpg')]
     train = COCO(os.path.join(local_filepath, 'train.json'))
-    x_train_raw = load_set(coco=train, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath, image_list=image_list)
+    x_train_raw = load_set(coco=train, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
 
     val = COCO(os.path.join(local_filepath, 'test.json'))
-    x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath, image_list=image_list)
+    x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
 
     train_size = min(len(x_train_raw), CONFIG['TRAIN_SIZE'])
     val_size = min(len(x_val_raw), CONFIG['VAL_SIZE'])
@@ -60,9 +59,8 @@ def unlabeled_preprocessing_func() -> PreprocessResponse:
     This function returns the unlabeled data split in the format expected by tensorleap
     """
     local_filepath = '/Users/chenrothschild/repo/Tensorleap-hub/armbench/armbench_segmentation/dataset'
-    image_list = [img for img in os.listdir(os.path.join(local_filepath, 'images')) if img.endswith('.jpg')]
     val = COCO(os.path.join(local_filepath, 'val.json'))
-    x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath, image_list=image_list)
+    x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
     val_size = min(len(x_val_raw), CONFIG['UL_SIZE'])
     np.random.seed(0)
     val_idx = np.random.choice(len(x_val_raw), val_size)
