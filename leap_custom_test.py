@@ -1,9 +1,8 @@
 import os
 import urllib
-from os.path import exists, dirname
+from os.path import exists
 
 import tensorflow as tf
-import numpy as np
 
 from armbench_segmentation.visualizers.visualizers import (
     gt_bb_decoder, bb_decoder, under_segmented_bb_visualizer, over_segmented_bb_visualizer
@@ -13,8 +12,6 @@ from leap_binder import (
     subset_images, input_image, get_bbs, get_masks, get_cat_instances_seg_lst, general_metrics_dict,
     segmentation_metrics_dict, metadata_dict, unlabeled_preprocessing_func
 )
-
-import json
 
 def check_integration():
 
