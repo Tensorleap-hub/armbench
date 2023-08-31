@@ -1,9 +1,8 @@
 import os
 import urllib
-from os.path import exists, dirname
+from os.path import exists
 
 import tensorflow as tf
-import numpy as np
 
 from armbench_segmentation.visualizers.visualizers import (
     gt_bb_decoder, bb_decoder, under_segmented_bb_visualizer, over_segmented_bb_visualizer
@@ -11,10 +10,11 @@ from armbench_segmentation.visualizers.visualizers import (
 from armbench_segmentation.visualizers.visualizers_getters import mask_visualizer_gt, mask_visualizer_prediction
 from leap_binder import (
     subset_images, input_image, get_bbs, get_masks, get_cat_instances_seg_lst, general_metrics_dict,
-    segmentation_metrics_dict, metadata_dict
+    segmentation_metrics_dict, metadata_dict, unlabeled_preprocessing_func
 )
 
 def check_integration():
+
     model_path = 'model/yolov5.h5'
     if not exists(model_path):
         os.makedirs('model', exist_ok=True)
@@ -26,6 +26,7 @@ def check_integration():
     batch = 64
     responses = subset_images()  # get dataset splits
     training_response = responses[0]  # [training, validation, test]
+    unlabeled_data = unlabeled_preprocessing_func()
     images = []
     bb_gt = []
     mask_gt =[]

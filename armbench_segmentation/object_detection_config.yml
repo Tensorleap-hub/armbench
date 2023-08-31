@@ -2,6 +2,8 @@ bucket_name: amazon-datasets
 project_id: amazon-dev-project
 dir: armbench-segmentation-0.1/armbench-segmentation-0.1
 img_folder: mix-object-tote
+local_filepath: /Users/chenrothschild/repo/Tensorleap-hub/armbench/armbench_segmentation/dataset
+
 BATCH_SIZE: 32
 # Note! TRAIN_SIZE + VAL_SIZE + UL_SIZE <= 3000
 TRAIN_SIZE: 1000

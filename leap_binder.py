@@ -7,17 +7,13 @@ import tensorflow as tf
 from PIL import Image
 
 from code_loader import leap_binder
-from code_loader.contract.enums import (
-    DatasetMetadataType,
-    LeapDataType
-)
+from code_loader.contract.enums import LeapDataType
 
 from code_loader.contract.datasetclasses import PreprocessResponse
 from pycocotools.coco import COCO
 
 from armbench_segmentation.config import CONFIG
 from armbench_segmentation.data.preprocessing import load_set
-from armbench_segmentation.utils.gcs_utils import _download
 from armbench_segmentation.utils.general_utils import count_obj_masks_occlusions, \
     count_obj_bbox_occlusions, extract_and_cache_bboxes
 from armbench_segmentation.metrics import instance_seg_loss, compute_losses
@@ -33,16 +29,13 @@ def subset_images() -> List[PreprocessResponse]:
     """
     This function returns the training and validation datasets in the format expected by tensorleap
     """
-    remote_filepath = os.path.join(CONFIG['dir'], CONFIG['img_folder'], "train.json")
-    local_filepath = _download(remote_filepath)
+    local_filepath = CONFIG['local_filepath']
     # initialize COCO api for instance annotations
-    train = COCO(local_filepath)
-    x_train_raw = load_set(coco=train, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'])
+    train = COCO(os.path.join(local_filepath, 'train.json'))
+    x_train_raw = load_set(coco=train, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
 
-    remote_filepath = os.path.join(CONFIG['dir'], CONFIG['img_folder'], "test.json")
-    local_filepath = _download(remote_filepath)
-    val = COCO(local_filepath)
-    x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'])
+    val = COCO(os.path.join(local_filepath, 'test.json'))
+    x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
 
     train_size = min(len(x_train_raw), CONFIG['TRAIN_SIZE'])
     val_size = min(len(x_val_raw), CONFIG['VAL_SIZE'])
@@ -61,10 +54,9 @@ def unlabeled_preprocessing_func() -> PreprocessResponse:
     """
     This function returns the unlabeled data split in the format expected by tensorleap
     """
-    remote_filepath = os.path.join(CONFIG['dir'], CONFIG['img_folder'], "val.json")
-    local_filepath = _download(remote_filepath)
-    val = COCO(local_filepath)
-    x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'])
+    local_filepath = CONFIG['local_filepath']
+    val = COCO(os.path.join(local_filepath, 'val.json'))
+    x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
     val_size = min(len(x_val_raw), CONFIG['UL_SIZE'])
     np.random.seed(0)
     val_idx = np.random.choice(len(x_val_raw), val_size)
@@ -79,11 +71,12 @@ def input_image(idx: int, data: PreprocessResponse) -> np.ndarray:
     """
     data = data.data
     x = data['samples'][idx]
-    remote_path = f"{CONFIG['dir']}/{CONFIG['img_folder']}/images/{x['file_name']}"
-    local_path = _download(remote_path)
+    local_filepath = CONFIG['local_filepath']
+    path = os.path.join(local_filepath, f"images/{x['file_name']}")
+
     # rescale
     image = np.array(
-        Image.open(local_path).resize((CONFIG['IMAGE_SIZE'][0], CONFIG['IMAGE_SIZE'][1]), Image.BILINEAR)) / 255.
+        Image.open(path).resize((CONFIG['IMAGE_SIZE'][0], CONFIG['IMAGE_SIZE'][1]), Image.BILINEAR)) / 255.
     return image
 
 
