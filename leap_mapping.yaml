@@ -11,6 +11,9 @@ decorators:
           operation: Permute
           name: permute_139
           id: '144'
+        - inputKey: data
+          operation: Visualizer
+          id: '439'
   - operation: GroundTruth
     data:
       type: GroundTruth
@@ -355,6 +358,11 @@ decorators:
           operation: Concatenate
           name: output
           id: '2'
+      segmentation_pred:
+        - outputKey: feature_map
+          operation: Permute
+          name: permute_141
+          id: '403'
       bb_gt:
         - outputKey: bbs
           operation: GroundTruth
@@ -363,11 +371,6 @@ decorators:
         - outputKey: masks
           operation: GroundTruth
           id: '425'
-      segmentation_pred:
-        - outputKey: feature_map
-          operation: Permute
-          name: permute_141
-          id: '403'
     outputs:
       loss:
         - inputKey: '0'
@@ -384,6 +387,22 @@ decorators:
         - outputKey: loss
           operation: CustomLoss
           id: '437'
+    outputs: {}
+  - operation: Visualizer
+    data:
+      type: Visualizer
+      name: Image
+      visualizer_name: Image
+      visualizer_type: Image
+      arg_names:
+        - data
+      user_unique_name: Image
+    id: '439'
+    inputs:
+      data:
+        - outputKey: images
+          operation: Input
+          id: '145'
     outputs: {}
 layers: []
 
