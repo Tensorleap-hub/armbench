@@ -291,7 +291,14 @@ def get_argmax_map_and_separate_masks(image, bbs, masks):
         instance_number = cats_dict.get(label, 0)
         # update counter if reach max instances we treat the last objects as one
         cats_dict[label] = instance_number + 1 if instance_number < CONFIG["MAX_INSTANCES_PER_CLASS"] else instance_number
-        argmax_map[resize_mask] = CONFIG["CATEGORIES"].index(label) * CONFIG["MAX_INSTANCES_PER_CLASS"] + cats_dict[label]  # curr_idx
+        label_index = CONFIG["CATEGORIES"].index(label) * CONFIG["MAX_INSTANCES_PER_CLASS"] + cats_dict[label]
+        if label == 'Tote':
+            empty = argmax_map == 0
+            tote = (argmax_map >= CONFIG["CATEGORIES"].index(label) * CONFIG["MAX_INSTANCES_PER_CLASS"]) &\
+                   (argmax_map < CONFIG["CATEGORIES"].index(label) * (CONFIG["MAX_INSTANCES_PER_CLASS"]+1))
+            argmax_map[(empty | tote) & resize_mask] = label_index
+        else:
+            argmax_map[resize_mask] = label_index
         if bb.label == 'Object':
             separate_masks.append(resize_mask)
     argmax_map[argmax_map == 0] = len(CONFIG['INSTANCES']) + 1
