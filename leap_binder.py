@@ -446,3 +446,7 @@ leap_binder.add_custom_metric(segmentation_metrics_dict, 'segmentation_metrics')
 
 # set metadata
 leap_binder.set_metadata(metadata_dict, name='metadata')
+
+
+if __name__ == '__main__':
+    leap_binder.check()
