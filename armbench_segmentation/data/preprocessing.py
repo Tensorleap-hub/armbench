@@ -1,4 +1,6 @@
 import os
+
+
 def load_set(coco, local_filepath, load_union=False):
     # get all images containing given categories
     CATEGORIES = []

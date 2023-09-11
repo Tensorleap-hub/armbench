@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Dict, Any
 import yaml
 
@@ -28,3 +29,5 @@ def load_od_config() -> Dict[str, Any]:
 
 
 CONFIG = load_od_config()
+
+local_filepath = str((Path(__file__).parent.parent / CONFIG['relative_dataset_path']).absolute())

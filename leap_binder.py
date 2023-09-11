@@ -1,4 +1,3 @@
-
 import os
 from typing import Union, List, Dict
 
@@ -12,7 +11,7 @@ from code_loader.contract.enums import LeapDataType
 from code_loader.contract.datasetclasses import PreprocessResponse
 from pycocotools.coco import COCO
 
-from armbench_segmentation.config import CONFIG
+from armbench_segmentation.config import CONFIG, local_filepath
 from armbench_segmentation.data.preprocessing import load_set
 from armbench_segmentation.utils.general_utils import count_obj_masks_occlusions, \
     count_obj_bbox_occlusions, extract_and_cache_bboxes
@@ -24,12 +23,12 @@ from armbench_segmentation.utils.general_utils import get_mask_list, get_argmax_
 from armbench_segmentation.utils.ioa_utils import ioa_mask
 from armbench_segmentation.metrics import over_under_segmented_metrics
 
+
 # ----------------------------------------------------data processing--------------------------------------------------
 def subset_images() -> List[PreprocessResponse]:
     """
     This function returns the training and validation datasets in the format expected by tensorleap
     """
-    local_filepath = CONFIG['local_filepath']
     # initialize COCO api for instance annotations
     train = COCO(os.path.join(local_filepath, 'train.json'))
     x_train_raw = load_set(coco=train, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
@@ -54,7 +53,6 @@ def unlabeled_preprocessing_func() -> PreprocessResponse:
     """
     This function returns the unlabeled data split in the format expected by tensorleap
     """
-    local_filepath = CONFIG['local_filepath']
     val = COCO(os.path.join(local_filepath, 'val.json'))
     x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
     val_size = min(len(x_val_raw), CONFIG['UL_SIZE'])
@@ -71,7 +69,6 @@ def input_image(idx: int, data: PreprocessResponse) -> np.ndarray:
     """
     data = data.data
     x = data['samples'][idx]
-    local_filepath = CONFIG['local_filepath']
     path = os.path.join(local_filepath, f"images/{x['file_name']}")
 
     # rescale
@@ -334,7 +331,6 @@ def count_small_bbs(idx: int, data: PreprocessResponse) -> float:
 
 
 def metadata_dict(idx: int, data: PreprocessResponse) -> Dict[str, Union[float, int, str]]:
-
     metadata_functions = {
         "idx": get_idx,
         "fname": get_fname,
@@ -391,17 +387,17 @@ def segmentation_metrics_dict(image: tf.Tensor, y_pred_bb: tf.Tensor, y_pred_mas
     bb_mask_gt = [get_mask_list(bb_gt[i, ...], mask_gt[i, ...], is_gt=True) for i in range(bs)]
     bb_mask_pred = [get_mask_list(y_pred_bb[i, ...], y_pred_mask[i, ...], is_gt=False) for i in range(bs)]
     sep_mask_pred = [get_argmax_map_and_separate_masks(image[i, ...], bb_mask_pred[i][0],
-                                       bb_mask_pred[i][1])['separate_masks'] for i in range(bs)]
+                                                       bb_mask_pred[i][1])['separate_masks'] for i in range(bs)]
     sep_mask_gt = [get_argmax_map_and_separate_masks(image[i, ...], bb_mask_gt[i][0],
-                                       bb_mask_gt[i][1])['separate_masks'] for i in range(bs)]
+                                                     bb_mask_gt[i][1])['separate_masks'] for i in range(bs)]
     pred_gt_ioas = [np.array([[ioa_mask(pred_mask, gt_mask) for gt_mask in sep_mask_gt[i]]
                               for pred_mask in sep_mask_pred[i]]) for i in range(bs)]
     gt_pred_ioas = [np.array([[ioa_mask(gt_mask, pred_mask) for gt_mask in sep_mask_gt[i]]
-                             for pred_mask in sep_mask_pred[i]]) for i in range(bs)]
-    gt_pred_ioas_t =[arr.transpose() for arr in gt_pred_ioas]
-    over_seg_bool, over_seg_count, avg_segments_over, _, over_conf =\
+                              for pred_mask in sep_mask_pred[i]]) for i in range(bs)]
+    gt_pred_ioas_t = [arr.transpose() for arr in gt_pred_ioas]
+    over_seg_bool, over_seg_count, avg_segments_over, _, over_conf = \
         over_under_segmented_metrics(gt_pred_ioas_t, get_avg_confidence=True, bb_mask_object_list=bb_mask_pred)
-    under_seg_bool, under_seg_count, avg_segments_under, under_small_bb, _ =\
+    under_seg_bool, under_seg_count, avg_segments_under, under_small_bb, _ = \
         over_under_segmented_metrics(pred_gt_ioas, count_small_bbs=True, bb_mask_object_list=bb_mask_gt)
     res = {
         "Over_Segmented_metric": over_seg_bool,
@@ -450,3 +446,7 @@ leap_binder.add_custom_metric(segmentation_metrics_dict, 'segmentation_metrics')
 
 # set metadata
 leap_binder.set_metadata(metadata_dict, name='metadata')
+
+
+if __name__ == '__main__':
+    leap_binder.check()
