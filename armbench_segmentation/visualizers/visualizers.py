@@ -1,10 +1,7 @@
 import numpy as np
-import tensorflow as tf
-from code_loader.contract.visualizer_classes import LeapImageWithBBox, LeapImageMask
+from code_loader.contract.visualizer_classes import LeapImageWithBBox
 
-from armbench_segmentation.config import CONFIG
-from armbench_segmentation.utils.general_utils import get_mask_list, remove_label_from_bbs, \
-    get_argmax_map_and_separate_masks
+from armbench_segmentation.utils.general_utils import get_mask_list, remove_label_from_bbs
 from armbench_segmentation.utils.ioa_utils import get_ioa_array
 
 
@@ -24,7 +21,6 @@ def gt_bb_decoder(image, bb_gt) -> LeapImageWithBBox:
 
 def under_segmented_bb_visualizer(image, y_pred_bb, y_pred_mask, bb_gt, mask_gt):  # bb_visualizer + gt_visualizer
     th = 0.8
-    rel_bbs = []
     ioas = get_ioa_array(image, y_pred_bb, y_pred_mask, bb_gt, mask_gt, containing='pred')
     th_arr = ioas > th
     matches_count = th_arr.astype(int).sum(axis=-1)
@@ -40,7 +36,6 @@ def under_segmented_bb_visualizer(image, y_pred_bb, y_pred_mask, bb_gt, mask_gt)
 
 def over_segmented_bb_visualizer(image, y_pred_bb, y_pred_mask, bb_gt, mask_gt):  # bb_visualizer + gt_visualizer
     th = 0.8
-    rel_bbs = []
     ioas = get_ioa_array(image, y_pred_bb, y_pred_mask, bb_gt, mask_gt, containing='gt')
     th_arr = ioas > th
     matches_count = th_arr.astype(int).sum(axis=0)
