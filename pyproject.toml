@@ -16,6 +16,7 @@ google-cloud-storage = "^2.10.0"
 pyyaml = "^6.0"
 torch = "1.12.1"
 protobuf = "^3.19.4"
+opencv-python-headless = "4.5.5.62"
 
 
 [build-system]
