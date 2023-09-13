@@ -1,6 +1,6 @@
 import os
-from typing import Union, List, Dict
-
+from typing import Union, List, Dict, Optional
+import cv2
 import numpy as np
 import tensorflow as tf
 from PIL import Image
@@ -94,7 +94,7 @@ def get_masks(idx: int, data: PreprocessResponse) -> np.ndarray:
     for i in range(min(len(anns), CONFIG['MAX_BB_PER_IMAGE'])):
         ann = anns[i]
         mask = coco.annToMask(ann)
-        mask = np.array(Image.fromarray(mask).resize((MASK_SIZE[0], MASK_SIZE[1]), Image.NEAREST))
+        mask = cv2.resize(mask, (MASK_SIZE[0], MASK_SIZE[1]), cv2.INTER_NEAREST)
         masks[i, ...] = mask
     return masks
 
@@ -106,15 +106,7 @@ def get_bbs(idx: int, data: PreprocessResponse) -> np.ndarray:
 
 
 # ----------------------------------------------------------metadata----------------------------------------------------
-def get_cat_instances_seg_lst(idx: int, data: PreprocessResponse, cat: str) -> Union[List[np.ma.array], None]:
-    img = input_image(idx, data)
-    if cat == "tote":
-        masks = get_tote_instances_masks(idx, data)
-    elif cat == "object":
-        masks = get_object_instances_masks(idx, data)
-    else:
-        print('Error category not supported')
-        return None
+def get_cat_instances_seg_lst(img: np.ndarray, masks: np.ndarray) -> Union[List[np.ma.array], None]:
     if masks is None:
         return None
     if masks[0, ...].shape != CONFIG['IMAGE_SIZE']:
@@ -126,10 +118,6 @@ def get_cat_instances_seg_lst(idx: int, data: PreprocessResponse, cat: str) -> U
         masked_arr = np.ma.masked_array(img, mask)
         instances.append(masked_arr)
     return instances
-
-
-def get_idx(index: int, subset: PreprocessResponse):
-    return index
 
 
 def get_fname(index: int, subset: PreprocessResponse) -> str:
@@ -150,49 +138,41 @@ def get_original_height(index: int, subset: PreprocessResponse) -> int:
     return x['height']
 
 
-def bbox_num(index: int, subset: PreprocessResponse) -> int:
-    bbs = get_bbs(index, subset)
+def bbox_num(bbs: np.ndarray) -> int:
     number_of_bb = np.count_nonzero(bbs[..., -1] != CONFIG['BACKGROUND_LABEL'])
     return number_of_bb
 
 
-def get_avg_bb_area(index: int, subset: PreprocessResponse) -> float:
-    bbs = get_bbs(index, subset)  # x,y,w,h
+def get_avg_bb_area(bbs: np.ndarray) -> float:
     valid_bbs = bbs[bbs[..., -1] != CONFIG['BACKGROUND_LABEL']]
     areas = valid_bbs[:, 2] * valid_bbs[:, 3]
     return areas.mean()
 
 
-def get_avg_bb_aspect_ratio(index: int, subset: PreprocessResponse) -> float:
-    bbs = get_bbs(index, subset)
+def get_avg_bb_aspect_ratio(bbs: np.ndarray) -> float:
     valid_bbs = bbs[bbs[..., -1] != CONFIG['BACKGROUND_LABEL']]
     aspect_ratios = valid_bbs[:, 2] / valid_bbs[:, 3]
     return aspect_ratios.mean()
 
 
-def get_instances_num(index: int, subset: PreprocessResponse) -> float:
-    bbs = get_bbs(index, subset)
+def get_instances_num(bbs: np.ndarray) -> float:
     valid_bbs = bbs[bbs[..., -1] != CONFIG['BACKGROUND_LABEL']]
     return float(valid_bbs.shape[0])
 
 
-def get_object_instances_num(index: int, subset: PreprocessResponse) -> float:
-    bbs = get_bbs(index, subset)
+def get_object_instances_num(bbs: np.ndarray) -> float:
     label = CONFIG['CATEGORIES'].index('Object')
     valid_bbs = bbs[bbs[..., -1] == label]
     return float(valid_bbs.shape[0])
 
 
-def get_tote_instances_num(index: int, subset: PreprocessResponse) -> float:
-    bbs = get_bbs(index, subset)
+def get_tote_instances_num(bbs: np.ndarray) -> float:
     label = CONFIG['CATEGORIES'].index('Tote')
     valid_bbs = bbs[bbs[..., -1] == label]
     return float(valid_bbs.shape[0])
 
 
-def get_avg_instance_percent(idx: int, data: PreprocessResponse) -> float:
-    mask = get_masks(idx, data)
-    bboxs = get_bbs(idx, data)
+def get_avg_instance_percent(mask: np.ndarray, bboxs: np.ndarray) -> float:
     valid_masks = mask[bboxs[..., -1] != CONFIG['BACKGROUND_LABEL']]
     if valid_masks.size == 0:
         return 0.
@@ -201,9 +181,7 @@ def get_avg_instance_percent(idx: int, data: PreprocessResponse) -> float:
     return np.mean(np.divide(res, size))
 
 
-def get_tote_instances_masks(idx: int, data: PreprocessResponse) -> Union[float, None]:
-    mask = get_masks(idx, data)
-    bboxs = get_bbs(idx, data)
+def get_tote_instances_masks(mask: np.ndarray, bboxs: np.ndarray) -> Optional[float]:
     label = CONFIG['CATEGORIES'].index('Tote')
     valid_masks = mask[bboxs[..., -1] == label]
     if valid_masks.size == 0:
@@ -211,8 +189,8 @@ def get_tote_instances_masks(idx: int, data: PreprocessResponse) -> Union[float,
     return valid_masks
 
 
-def get_tote_instances_sizes(idx: int, data: PreprocessResponse) -> float:
-    masks = get_tote_instances_masks(idx, data)
+def get_tote_instances_sizes(tote_instances_masks: Optional[float]) -> float:
+    masks = tote_instances_masks
     if masks is None:
         return 0
     res = np.sum(masks, axis=(1, 2))
@@ -220,47 +198,39 @@ def get_tote_instances_sizes(idx: int, data: PreprocessResponse) -> float:
     return np.divide(res, size)
 
 
-def get_tote_avg_instance_percent(idx: int, data: PreprocessResponse) -> float:
-    sizes = get_tote_instances_sizes(idx, data)
-    return float(np.mean(sizes))
+def get_tote_avg_instance_percent(tote_instances_sizes) -> float:
+    return float(np.mean(tote_instances_sizes))
 
 
-def get_tote_std_instance_percent(idx: int, data: PreprocessResponse) -> float:
-    sizes = get_tote_instances_sizes(idx, data)
-    return float(np.std(sizes))
+def get_tote_std_instance_percent(tote_instances_sizes) -> float:
+    return float(np.std(tote_instances_sizes))
 
 
-def get_tote_instances_mean(idx: int, data: PreprocessResponse) -> float:
-    instances = get_cat_instances_seg_lst(idx, data, "tote")
-    if instances is None:
+def get_tote_instances_mean(cat_instances_seg_lst_tote) -> float:
+    if cat_instances_seg_lst_tote is None:
         return -1
-    return np.array([i.mean() for i in instances]).mean()
+    return np.array([i.mean() for i in cat_instances_seg_lst_tote]).mean()
 
 
-def get_tote_instances_std(idx: int, data: PreprocessResponse) -> float:
-    instances = get_cat_instances_seg_lst(idx, data, "tote")
-    if instances is None:
+def get_tote_instances_std(cat_instances_seg_lst_tote) -> float:
+    if cat_instances_seg_lst_tote is None:
         return -1
-    return np.array([i.std() for i in instances]).std()
+    return np.array([i.std() for i in cat_instances_seg_lst_tote]).std()
 
 
-def get_object_instances_mean(idx: int, data: PreprocessResponse) -> float:
-    instances = get_cat_instances_seg_lst(idx, data, "object")
-    if instances is None:
+def get_object_instances_mean(cat_instances_seg_lst_object) -> float:
+    if cat_instances_seg_lst_object is None:
         return -1
-    return np.array([i.mean() for i in instances]).mean()
+    return np.array([i.mean() for i in cat_instances_seg_lst_object]).mean()
 
 
-def get_object_instances_std(idx: int, data: PreprocessResponse) -> float:
-    instances = get_cat_instances_seg_lst(idx, data, "object")
-    if instances is None:
+def get_object_instances_std(cat_instances_seg_lst_object) -> float:
+    if cat_instances_seg_lst_object is None:
         return -1
-    return np.array([i.std() for i in instances]).std()
+    return np.array([i.std() for i in cat_instances_seg_lst_object]).std()
 
 
-def get_object_instances_masks(idx: int, data: PreprocessResponse) -> Union[np.ndarray, None]:
-    mask = get_masks(idx, data)
-    bboxs = get_bbs(idx, data)
+def get_object_instances_masks(mask: np.ndarray, bboxs: np.ndarray) -> Union[np.ndarray, None]:
     label = CONFIG['CATEGORIES'].index('Object')
     valid_masks = mask[bboxs[..., -1] == label]
     if valid_masks.size == 0:
@@ -268,8 +238,8 @@ def get_object_instances_masks(idx: int, data: PreprocessResponse) -> Union[np.n
     return valid_masks
 
 
-def get_object_instances_sizes(idx: int, data: PreprocessResponse) -> float:
-    masks = get_object_instances_masks(idx, data)
+def get_object_instances_sizes(object_instances_masks) -> float:
+    masks = object_instances_masks
     if masks is None:
         return 0
     res = np.sum(masks, axis=(1, 2))
@@ -277,19 +247,15 @@ def get_object_instances_sizes(idx: int, data: PreprocessResponse) -> float:
     return np.divide(res, size)
 
 
-def get_object_avg_instance_percent(idx: int, data: PreprocessResponse) -> float:
-    sizes = get_object_instances_sizes(idx, data)
-    return float(np.mean(sizes))
+def get_object_avg_instance_percent(object_instances_sizes) -> float:
+    return float(np.mean(object_instances_sizes))
 
 
-def get_object_std_instance_percent(idx: int, data: PreprocessResponse) -> float:
-    sizes = get_object_instances_sizes(idx, data)
-    return float(np.std(sizes))
+def get_object_std_instance_percent(object_instances_sizes) -> float:
+    return float(np.std(object_instances_sizes))
 
 
-def get_background_percent(idx: int, data: PreprocessResponse) -> float:
-    masks = get_masks(idx, data)
-    bboxs = get_bbs(idx, data)
+def get_background_percent(masks: np.ndarray, bboxs: np.ndarray) -> float:
     valid_masks = masks[bboxs[..., -1] != CONFIG['BACKGROUND_LABEL']]
     if valid_masks.size == 0:
         return 1.0
@@ -298,70 +264,75 @@ def get_background_percent(idx: int, data: PreprocessResponse) -> float:
     return float(np.round(np.divide(res[res == 0].size, size), 3))
 
 
-def get_obj_bbox_occlusions_count(idx: int, data: PreprocessResponse, calc_avg_flag=False) -> float:
+def get_obj_bbox_occlusions_count(img: np.ndarray, bboxes: np.ndarray, calc_avg_flag=False) -> float:
     occlusion_threshold = 0.2  # Example threshold value
-    img = input_image(idx, data)
-    bboxes = get_bbs(idx, data)  # [x,y,w,h]
     occlusions_count = count_obj_bbox_occlusions(img, bboxes, occlusion_threshold, calc_avg_flag)
     return occlusions_count
 
 
-def get_obj_bbox_occlusions_avg(idx: int, data: PreprocessResponse) -> float:
-    return get_obj_bbox_occlusions_count(idx, data, calc_avg_flag=True)
+def get_obj_bbox_occlusions_avg(img: np.ndarray, bboxes: np.ndarray) -> float:
+    return get_obj_bbox_occlusions_count(img, bboxes, calc_avg_flag=True)
 
 
-def get_obj_mask_occlusions_count(idx: int, data: PreprocessResponse) -> int:
+def get_obj_mask_occlusions_count(object_instances_masks) -> int:
     occlusion_threshold = 0.1  # Example threshold value
-    masks = get_object_instances_masks(idx, data)
+    masks = object_instances_masks
     occlusion_count = count_obj_masks_occlusions(masks, occlusion_threshold)
     return occlusion_count
 
 
-def count_duplicate_bbs(index: int, subset: PreprocessResponse):
-    bbs_gt = get_bbs(index, subset)
+def count_duplicate_bbs(bbs_gt: np.ndarray) -> int:
     real_gt = bbs_gt[bbs_gt[..., 4] != CONFIG['BACKGROUND_LABEL']]
     return int(real_gt.shape[0] != np.unique(real_gt, axis=0).shape[0])
 
 
-def count_small_bbs(idx: int, data: PreprocessResponse) -> float:
-    bboxes = get_bbs(idx, data)
+def count_small_bbs(bboxes: np.ndarray) -> float:
     obj_boxes = bboxes[bboxes[..., -1] == 0]
     areas = obj_boxes[..., 2] * obj_boxes[..., 3]
     return float(len(areas[areas < CONFIG['SMALL_BBS_TH']]))
 
 
 def metadata_dict(idx: int, data: PreprocessResponse) -> Dict[str, Union[float, int, str]]:
-    metadata_functions = {
-        "idx": get_idx,
-        "fname": get_fname,
-        "origin_width": get_original_width,
-        "origin_height": get_original_height,
-        "instances_number": get_instances_num,
-        "tote_number": get_tote_instances_num,
-        "object_number": get_object_instances_num,
-        "avg_instance_size": get_avg_instance_percent,
-        "tote_instances_mean": get_tote_instances_mean,
-        "tote_instances_std": get_tote_instances_std,
-        "object_instances_mean": get_object_instances_mean,
-        "object_instances_std": get_object_instances_std,
-        "tote_avg_instance_size": get_tote_avg_instance_percent,
-        "tote_std_instance_size": get_tote_std_instance_percent,
-        "object_avg_instance_size": get_object_avg_instance_percent,
-        "object_std_instance_size": get_object_std_instance_percent,
-        "bbox_number": bbox_num,
-        "bbox_area": get_avg_bb_area,
-        "bbox_aspect_ratio": get_avg_bb_aspect_ratio,
-        "background_percent": get_background_percent,
-        "duplicate_bb": count_duplicate_bbs,
-        "small_bbs_number": count_small_bbs,
-        "count_total_obj_bbox_occlusions": get_obj_bbox_occlusions_count,
-        "avg_obj_bbox_occlusions": get_obj_bbox_occlusions_avg,
-        "count_obj_mask_occlusions": get_obj_mask_occlusions_count
+    bbs = get_bbs(idx, data)
+    masks = get_masks(idx, data)
+    img = input_image(idx, data)
+
+    tote_instances_masks = get_tote_instances_masks(masks, bbs)
+    object_instances_masks = get_object_instances_masks(masks, bbs)
+    cat_instances_seg_lst_object = get_cat_instances_seg_lst(img, object_instances_masks)
+    cat_instances_seg_lst_tote = get_cat_instances_seg_lst(img, tote_instances_masks)
+    tote_instances_sizes = get_tote_instances_sizes(tote_instances_masks)
+    object_instances_sizes = get_object_instances_sizes(object_instances_masks)
+
+    metadatas = {
+        "idx": idx,
+        "fname": get_fname(idx, data),
+        "origin_width": get_original_width(idx, data),
+        "origin_height": get_original_height(idx, data),
+        "instances_number": get_instances_num(bbs),
+        "tote_number": get_tote_instances_num(bbs),
+        "object_number": get_object_instances_num(bbs),
+        "avg_instance_size": get_avg_instance_percent(masks, bbs),
+        "tote_instances_mean": get_tote_instances_mean(cat_instances_seg_lst_tote),
+        "tote_instances_std": get_tote_instances_std(cat_instances_seg_lst_tote),
+        "object_instances_mean": get_object_instances_mean(cat_instances_seg_lst_object),
+        "object_instances_std": get_object_instances_std(cat_instances_seg_lst_object),
+        "tote_avg_instance_size": get_tote_avg_instance_percent(tote_instances_sizes),
+        "tote_std_instance_size": get_tote_std_instance_percent(tote_instances_sizes),
+        "object_avg_instance_size": get_object_avg_instance_percent(object_instances_sizes),
+        "object_std_instance_size": get_object_std_instance_percent(object_instances_sizes),
+        "bbox_number": bbox_num(bbs),
+        "bbox_area": get_avg_bb_area(bbs),
+        "bbox_aspect_ratio": get_avg_bb_aspect_ratio(bbs),
+        "background_percent": get_background_percent(masks, bbs),
+        "duplicate_bb": count_duplicate_bbs(bbs),
+        "small_bbs_number": count_small_bbs(bbs),
+        "count_total_obj_bbox_occlusions": get_obj_bbox_occlusions_count(img, bbs),
+        "avg_obj_bbox_occlusions": get_obj_bbox_occlusions_avg(img, bbs),
+        "count_obj_mask_occlusions": get_obj_mask_occlusions_count(object_instances_masks)
     }
-    res = dict()
-    for func_name, func in metadata_functions.items():
-        res[func_name] = func(idx, data)
-    return res
+
+    return metadatas
 
 
 def general_metrics_dict(bb_gt: tf.Tensor, detection_pred: tf.Tensor,
@@ -446,7 +417,6 @@ leap_binder.add_custom_metric(segmentation_metrics_dict, 'segmentation_metrics')
 
 # set metadata
 leap_binder.set_metadata(metadata_dict, name='metadata')
-
 
 if __name__ == '__main__':
     leap_binder.check()
