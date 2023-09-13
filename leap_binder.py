@@ -1,6 +1,6 @@
 import os
-from typing import Union, List, Dict
-
+from typing import Union, List, Dict, Optional
+import cv2
 import numpy as np
 import tensorflow as tf
 from PIL import Image
@@ -94,7 +94,7 @@ def get_masks(idx: int, data: PreprocessResponse) -> np.ndarray:
     for i in range(min(len(anns), CONFIG['MAX_BB_PER_IMAGE'])):
         ann = anns[i]
         mask = coco.annToMask(ann)
-        mask = np.array(Image.fromarray(mask).resize((MASK_SIZE[0], MASK_SIZE[1]), Image.NEAREST))
+        mask = cv2.resize(mask, (MASK_SIZE[0], MASK_SIZE[1]), cv2.INTER_NEAREST)
         masks[i, ...] = mask
     return masks
 
