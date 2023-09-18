@@ -39,7 +39,8 @@ def subset_images() -> List[PreprocessResponse]:
     train_size = min(len(x_train_raw), CONFIG['TRAIN_SIZE'])
     val_size = min(len(x_val_raw), CONFIG['VAL_SIZE'])
     np.random.seed(0)
-    train_idx, val_idx = np.random.choice(len(x_train_raw), train_size), np.random.choice(len(x_val_raw), val_size)
+    train_idx, val_idx = (np.random.choice(len(x_train_raw), train_size, replace=False),
+                          np.random.choice(len(x_val_raw), val_size, replace=False))
     training_subset = PreprocessResponse(length=train_size, data={'cocofile': train,
                                                                   'samples': np.take(x_train_raw, train_idx),
                                                                   'subdir': 'train'})
