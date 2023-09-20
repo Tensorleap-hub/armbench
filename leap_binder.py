@@ -58,7 +58,7 @@ def unlabeled_preprocessing_func() -> PreprocessResponse:
     x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
     val_size = min(len(x_val_raw), CONFIG['UL_SIZE'])
     np.random.seed(0)
-    val_idx = np.random.choice(len(x_val_raw), val_size)
+    val_idx = np.random.choice(len(x_val_raw), val_size, replace=False)
     return PreprocessResponse(length=val_size, data={'cocofile': val,
                                                      'samples': np.take(x_val_raw, val_idx),
                                                      'subdir': 'val'})
