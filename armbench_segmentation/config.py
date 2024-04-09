@@ -29,5 +29,4 @@ def load_od_config() -> Dict[str, Any]:
 
 
 CONFIG = load_od_config()
-
-local_filepath = str(Path(CONFIG['dataset_path']).absolute())
+local_filepath = str(Path(CONFIG['dataset_path']).absolute()) if CONFIG["LOCAL_FLAG"] is True else None

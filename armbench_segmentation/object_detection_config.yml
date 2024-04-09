@@ -1,8 +1,9 @@
-bucket_name: amazon-datasets
-project_id: amazon-dev-project
-dir: armbench-segmentation-0.1/armbench-segmentation-0.1
-img_folder: mix-object-tote
+bucket_name: amazon-datasets #tl-private-datasets
+project_id: amazon-dev-project #tl-private-dev-project
+remote_dir: armbench-segmentation-0.1/armbench-segmentation-0.1/mix-object-tote
 dataset_path: /root/armbench_segmentation/dataset
+
+LOCAL_FLAG: False
 
 BATCH_SIZE: 32
 # Note! TRAIN_SIZE + VAL_SIZE + UL_SIZE <= 3000

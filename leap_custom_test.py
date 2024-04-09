@@ -58,8 +58,6 @@ def check_integration():
     over_segmented_img = over_segmented_bb_visualizer(images[0], y_pred_bbs[0, ...], y_pred_masks[0, ...],
                                                       y_true_bbs[0, ...], y_true_masks[0, ...])
     # metadata functions
-    for cat in ['tote', 'object']:
-        instances = get_cat_instances_seg_lst(idx, training_response, cat)
     metadata = metadata_dict(idx, training_response)
 
 

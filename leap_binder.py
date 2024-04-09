@@ -22,46 +22,58 @@ from armbench_segmentation.visualizers.visualizers_getters import mask_visualize
 from armbench_segmentation.utils.general_utils import get_mask_list, get_argmax_map_and_separate_masks
 from armbench_segmentation.utils.ioa_utils import ioa_mask
 from armbench_segmentation.metrics import over_under_segmented_metrics
+from armbench_segmentation.utils.gcs_utils import _download
 
 
 # ----------------------------------------------------data processing--------------------------------------------------
+
+
 def subset_images() -> List[PreprocessResponse]:
     """
     This function returns the training and validation datasets in the format expected by tensorleap
     """
-    # initialize COCO api for instance annotations
-    train = COCO(os.path.join(local_filepath, 'train.json'))
-    x_train_raw = load_set(coco=train, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
-
-    val = COCO(os.path.join(local_filepath, 'test.json'))
-    x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
-
-    train_size = min(len(x_train_raw), CONFIG['TRAIN_SIZE'])
-    val_size = min(len(x_val_raw), CONFIG['VAL_SIZE'])
     np.random.seed(0)
-    train_idx, val_idx = (np.random.choice(len(x_train_raw), train_size, replace=False),
-                          np.random.choice(len(x_val_raw), val_size, replace=False))
-    training_subset = PreprocessResponse(length=train_size, data={'cocofile': train,
-                                                                  'samples': np.take(x_train_raw, train_idx),
-                                                                  'subdir': 'train'})
-    validation_subset = PreprocessResponse(length=val_size, data={'cocofile': val,
-                                                                  'samples': np.take(x_val_raw, val_idx),
-                                                                  'subdir': 'test'})
-    return [training_subset, validation_subset]
+    local_paths = []
+    subset_names = ["train", "val"]
+    res = []
+    # if CONFIG['LOCAL_FLAG'] is False:
+    #     for sub in subset_names:
+    #         remote_filepath = os.path.join(CONFIG['remote_dir'], f"{sub}.json")
+    #         local_paths.append(_download(remote_filepath))
+    # else:
+    #     for sub in subset_names:
+    #         local_paths.append(os.path.join(local_filepath, f'{sub}.json'))
+    for sub in subset_names:
+        remote_filepath = os.path.join(CONFIG['remote_dir'], f"{sub}.json")
+        local_paths.append(_download(remote_filepath))
+
+    for path, sub in zip(local_paths, subset_names):
+        # initialize COCO api for instance annotations
+        coco = COCO(path)
+        x_raw = load_set(coco=coco, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
+        sub_size = min(len(x_raw), CONFIG[f'{sub.upper()}_SIZE'])
+        idx = np.random.choice(len(x_raw), sub_size, replace=False)
+        res.append(PreprocessResponse(length=sub_size, data={'cocofile': coco,
+                                                            'samples': np.take(x_raw, idx),
+                                                            'subdir': f'{sub}'}))
+    return res
 
 
 def unlabeled_preprocessing_func() -> PreprocessResponse:
     """
     This function returns the unlabeled data split in the format expected by tensorleap
     """
-    val = COCO(os.path.join(local_filepath, 'val.json'))
-    x_val_raw = load_set(coco=val, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
-    val_size = min(len(x_val_raw), CONFIG['UL_SIZE'])
+    remote_filepath = os.path.join(CONFIG['remote_dir'], f"test.json")
+    local_path = _download(remote_filepath, local_filepath)
+
+    test = COCO(local_path)
+    x_test_raw = load_set(coco=test, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
+    test_size = min(len(x_test_raw), CONFIG['UL_SIZE'])
     np.random.seed(0)
-    val_idx = np.random.choice(len(x_val_raw), val_size, replace=False)
-    return PreprocessResponse(length=val_size, data={'cocofile': val,
-                                                     'samples': np.take(x_val_raw, val_idx),
-                                                     'subdir': 'val'})
+    test_idx = np.random.choice(len(x_test_raw), test_size, replace=False)
+    return PreprocessResponse(length=test_size, data={'cocofile': test,
+                                                     'samples': np.take(x_test_raw, test_idx),
+                                                     'subdir': 'test'})
 
 
 def input_image(idx: int, data: PreprocessResponse) -> np.ndarray:
@@ -70,26 +82,25 @@ def input_image(idx: int, data: PreprocessResponse) -> np.ndarray:
     """
     data = data.data
     x = data['samples'][idx]
-    path = os.path.join(local_filepath, f"images/{x['file_name']}")
-
+    remote_path = os.path.join(CONFIG['remote_dir'], "images", x['file_name'])
+    local_path = _download(remote_path, local_filepath)
     # rescale
     image = np.array(
-        Image.open(path).resize((CONFIG['IMAGE_SIZE'][0], CONFIG['IMAGE_SIZE'][1]), Image.BILINEAR)) / 255.
+        Image.open(local_path).resize((CONFIG['IMAGE_SIZE'][0], CONFIG['IMAGE_SIZE'][1]), Image.BILINEAR)) / 255.
     return image
 
 
 def get_annotation_coco(idx: int, data: PreprocessResponse) -> np.ndarray:
-    x = data['samples'][idx]
-    coco = data['cocofile']
+    x = data.data['samples'][idx]
+    coco = data.data['cocofile']
     ann_ids = coco.getAnnIds(imgIds=x['id'])
     anns = coco.loadAnns(ann_ids)
     return anns
 
 
 def get_masks(idx: int, data: PreprocessResponse) -> np.ndarray:
-    data = data.data
     MASK_SIZE = (160, 160)
-    coco = data['cocofile']
+    coco = data.data['cocofile']
     anns = get_annotation_coco(idx, data)
     masks = np.zeros([CONFIG['MAX_BB_PER_IMAGE'], *MASK_SIZE], dtype=np.uint8)
     for i in range(min(len(anns), CONFIG['MAX_BB_PER_IMAGE'])):
