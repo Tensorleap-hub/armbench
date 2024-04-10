@@ -13,8 +13,8 @@ from leap_binder import (
     segmentation_metrics_dict, metadata_dict, unlabeled_preprocessing_func
 )
 
-def check_integration():
 
+def check_integration():
     model_path = 'model/yolov5.h5'
     if not exists(model_path):
         os.makedirs('model', exist_ok=True)
@@ -29,12 +29,12 @@ def check_integration():
     unlabeled_data = unlabeled_preprocessing_func()
     images = []
     bb_gt = []
-    mask_gt =[]
+    mask_gt = []
     for idx in range(batch):
         images.append(input_image(idx, training_response))
         bb_gt.append(get_bbs(idx, training_response))
         mask_gt.append(get_masks(idx, training_response))
-    y_true_bbs = tf.convert_to_tensor(bb_gt) # convert ground truth bbs to tensor
+    y_true_bbs = tf.convert_to_tensor(bb_gt)  # convert ground truth bbs to tensor
     y_true_masks = tf.convert_to_tensor(mask_gt)  # convert ground truth bbs to tensor
 
     input_img_tf = tf.convert_to_tensor(images)
