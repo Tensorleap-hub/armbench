@@ -36,16 +36,13 @@ def subset_images() -> List[PreprocessResponse]:
     local_paths = []
     subset_names = ["train", "val"]
     res = []
-    # if CONFIG['LOCAL_FLAG'] is False:
-    #     for sub in subset_names:
-    #         remote_filepath = os.path.join(CONFIG['remote_dir'], f"{sub}.json")
-    #         local_paths.append(_download(remote_filepath))
-    # else:
-    #     for sub in subset_names:
-    #         local_paths.append(os.path.join(local_filepath, f'{sub}.json'))
-    for sub in subset_names:
-        remote_filepath = os.path.join(CONFIG['remote_dir'], f"{sub}.json")
-        local_paths.append(_download(remote_filepath))
+    if CONFIG['LOCAL_FLAG'] is False:
+        for sub in subset_names:
+            remote_filepath = os.path.join(CONFIG['remote_dir'], f"{sub}.json")
+            local_paths.append(_download(remote_filepath))
+    else:
+        for sub in subset_names:
+            local_paths.append(os.path.join(local_filepath, f'{sub}.json'))
 
     for path, sub in zip(local_paths, subset_names):
         # initialize COCO api for instance annotations
@@ -63,8 +60,11 @@ def unlabeled_preprocessing_func() -> PreprocessResponse:
     """
     This function returns the unlabeled data split in the format expected by tensorleap
     """
-    remote_filepath = os.path.join(CONFIG['remote_dir'], f"test.json")
-    local_path = _download(remote_filepath, local_filepath)
+    if CONFIG['LOCAL_FLAG'] is False:
+        remote_filepath = os.path.join(CONFIG['remote_dir'], f"test.json")
+        local_path = _download(remote_filepath)
+    else:
+        local_path = os.path.join(local_filepath, f'test.json')
 
     test = COCO(local_path)
     x_test_raw = load_set(coco=test, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
@@ -82,8 +82,12 @@ def input_image(idx: int, data: PreprocessResponse) -> np.ndarray:
     """
     data = data.data
     x = data['samples'][idx]
-    remote_path = os.path.join(CONFIG['remote_dir'], "images", x['file_name'])
-    local_path = _download(remote_path, local_filepath)
+
+    if CONFIG['LOCAL_FLAG'] is False:
+        remote_filepath = os.path.join(CONFIG['remote_dir'], "images", x['file_name'])
+        local_path = _download(remote_filepath)
+    else:
+        local_path = os.path.join(local_filepath, "images", x['file_name'])
     # rescale
     image = np.array(
         Image.open(local_path).resize((CONFIG['IMAGE_SIZE'][0], CONFIG['IMAGE_SIZE'][1]), Image.BILINEAR)) / 255.
