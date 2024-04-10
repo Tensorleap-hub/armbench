@@ -51,9 +51,9 @@ def subset_images() -> List[PreprocessResponse]:
         # initialize COCO api for instance annotations
         coco = COCO(path)
         x_raw = load_set(coco=coco, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
-        sub_size = min(len(x_raw), CONFIG[f'{sub.upper()}_SIZE'])
-        idx = np.random.choice(len(x_raw), sub_size, replace=False)
-        res.append(PreprocessResponse(length=sub_size, data={'cocofile': coco,
+        # sub_size = min(len(x_raw), CONFIG[f'{sub.upper()}_SIZE'])
+        idx = np.random.choice(len(x_raw), len(x_raw), replace=False)
+        res.append(PreprocessResponse(length=len(x_raw), data={'cocofile': coco,
                                                             'samples': np.take(x_raw, idx),
                                                             'subdir': f'{sub}'}))
     return res
@@ -68,10 +68,10 @@ def unlabeled_preprocessing_func() -> PreprocessResponse:
 
     test = COCO(local_path)
     x_test_raw = load_set(coco=test, load_union=CONFIG['LOAD_UNION_CATEGORIES_IMAGES'], local_filepath=local_filepath)
-    test_size = min(len(x_test_raw), CONFIG['UL_SIZE'])
+    # test_size = min(len(x_test_raw), CONFIG['UL_SIZE'])
     np.random.seed(0)
-    test_idx = np.random.choice(len(x_test_raw), test_size, replace=False)
-    return PreprocessResponse(length=test_size, data={'cocofile': test,
+    test_idx = np.random.choice(len(x_test_raw), len(x_test_raw), replace=False)
+    return PreprocessResponse(length=len(x_test_raw), data={'cocofile': test,
                                                      'samples': np.take(x_test_raw, test_idx),
                                                      'subdir': 'test'})
 
