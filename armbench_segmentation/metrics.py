@@ -9,6 +9,7 @@ from armbench_segmentation.utils.general_utils import remove_label_from_bbs
 from armbench_segmentation.yolo_helpers.yolo_utils import LOSS_FN
 from code_loader.contract.responsedataclasses import BoundingBox
 
+
 def compute_losses(obj_true: tf.Tensor, od_pred: tf.Tensor,
                    mask_true, instance_seg: tf.Tensor) -> Union[
     Tuple[List[tf.Tensor], List[tf.Tensor], List[tf.Tensor]],
@@ -38,11 +39,11 @@ def instance_seg_loss(bb_gt: tf.Tensor, detection_pred: tf.Tensor,
 def over_under_segmented_metrics(batched_ioas_list: List[np.ndarray], count_small_bbs=False, get_avg_confidence=False,
                                  bb_mask_object_list: List[Union[List[BoundingBox], List[np.ndarray]]] = None):
     th = 0.8
-    segmented_arr = [0.]*len(batched_ioas_list)
-    segmented_arr_count = [0.]*len(batched_ioas_list)
-    average_segments_amount = [0.]*len(batched_ioas_list)
-    conf_arr = [0.]*len(batched_ioas_list)
-    has_small_bbs = [0.]*len(batched_ioas_list)
+    segmented_arr = [0.] * len(batched_ioas_list)
+    segmented_arr_count = [0.] * len(batched_ioas_list)
+    average_segments_amount = [0.] * len(batched_ioas_list)
+    conf_arr = [0.] * len(batched_ioas_list)
+    has_small_bbs = [0.] * len(batched_ioas_list)
     for batch in range(len(batched_ioas_list)):
         ioas = batched_ioas_list[batch]
         if len(ioas) > 0:
@@ -74,8 +75,6 @@ def over_under_segmented_metrics(batched_ioas_list: List[np.ndarray], count_smal
                     else:
                         avg_conf = 0.
                     conf_arr[batch] = avg_conf
-    return tf.convert_to_tensor(segmented_arr), tf.convert_to_tensor(segmented_arr_count),\
-           tf.convert_to_tensor(average_segments_amount), tf.convert_to_tensor(has_small_bbs),\
-           tf.convert_to_tensor(conf_arr)
-
-
+    return tf.convert_to_tensor(segmented_arr), tf.convert_to_tensor(segmented_arr_count), \
+        tf.convert_to_tensor(average_segments_amount), tf.convert_to_tensor(has_small_bbs), \
+        tf.convert_to_tensor(conf_arr)
