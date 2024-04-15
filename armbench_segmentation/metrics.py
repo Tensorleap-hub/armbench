@@ -9,7 +9,6 @@ from armbench_segmentation.utils.general_utils import remove_label_from_bbs
 from armbench_segmentation.yolo_helpers.yolo_utils import LOSS_FN
 from code_loader.contract.responsedataclasses import BoundingBox
 
-
 def compute_losses(obj_true: tf.Tensor, od_pred: tf.Tensor,
                    mask_true, instance_seg: tf.Tensor) -> Union[
     Tuple[List[tf.Tensor], List[tf.Tensor], List[tf.Tensor]],
@@ -78,3 +77,5 @@ def over_under_segmented_metrics(batched_ioas_list: List[np.ndarray], count_smal
     return tf.convert_to_tensor(segmented_arr), tf.convert_to_tensor(segmented_arr_count),\
            tf.convert_to_tensor(average_segments_amount), tf.convert_to_tensor(has_small_bbs),\
            tf.convert_to_tensor(conf_arr)
+
+

@@ -4,6 +4,7 @@ from os.path import exists
 
 import tensorflow as tf
 
+from armbench_segmentation.utils.confusion_matrix import confusion_matrix_metric
 from armbench_segmentation.visualizers.visualizers import (
     gt_bb_decoder, bb_decoder, under_segmented_bb_visualizer, over_segmented_bb_visualizer
 )
@@ -23,7 +24,7 @@ def check_integration():
             "https://storage.googleapis.com/example-datasets-47ml982d/yolov5/yolov5.h5",
             model_path)
     model = tf.keras.models.load_model(model_path)
-    batch = 64
+    batch = 1
     responses = subset_images()  # get dataset splits
     training_response = responses[0]  # [training, validation, test]
     unlabeled_data = unlabeled_preprocessing_func()
@@ -47,6 +48,8 @@ def check_integration():
     general_metric_results = general_metrics_dict(y_true_bbs, y_pred_bbs, y_true_masks, y_pred_masks)
     segmentation_metrics_results = segmentation_metrics_dict(input_img_tf, y_pred_bbs, y_pred_masks, y_true_bbs,
                                                              y_true_masks)
+    cm = confusion_matrix_metric(y_true_bbs, y_pred_bbs)
+
     # visualizers
     #
     gt_mask_visualizer_img = mask_visualizer_gt(images[0], y_true_bbs[0, ...], y_true_masks[0, ...])

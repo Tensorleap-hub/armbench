@@ -13,6 +13,7 @@ from pycocotools.coco import COCO
 
 from armbench_segmentation.config import CONFIG, local_filepath
 from armbench_segmentation.data.preprocessing import load_set
+from armbench_segmentation.utils.confusion_matrix import confusion_matrix_metric
 from armbench_segmentation.utils.general_utils import count_obj_masks_occlusions, \
     count_obj_bbox_occlusions, extract_and_cache_bboxes
 from armbench_segmentation.metrics import instance_seg_loss, compute_losses
@@ -430,6 +431,7 @@ leap_binder.set_visualizer(over_segmented_bb_visualizer, 'over segment', LeapDat
 # set custom metrics
 leap_binder.add_custom_metric(general_metrics_dict, 'general_metrics')
 leap_binder.add_custom_metric(segmentation_metrics_dict, 'segmentation_metrics')
+leap_binder.add_custom_metric(confusion_matrix_metric, "Confusion Matrix")
 
 # set metadata
 leap_binder.set_metadata(metadata_dict, name='metadata')
