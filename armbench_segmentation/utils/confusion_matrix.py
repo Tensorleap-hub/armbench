@@ -21,7 +21,7 @@ def transpose_bbox_coor(boxes: Union[NDArray[np.float32], tf.Tensor]) -> Union[N
 
 def confusion_matrix_metric(bb_gt: tf.Tensor, y_pred_bb: tf.Tensor):
     # assumes we get predictions in xyxy format in gt AND reg
-    # assumes gt is in xywh form #TODO: check
+    # assumes gt is in xywh form
 
     reg = y_pred_bb[:, :, :4]
     class_pred = y_pred_bb[:, :, 4:]
@@ -32,25 +32,20 @@ def confusion_matrix_metric(bb_gt: tf.Tensor, y_pred_bb: tf.Tensor):
     # reg, cls = tf.transpose(reg, (0, 2, 1)), tf.transpose(cls, (0, 2, 1))
     id_to_name = {0: 'Object', 1: 'Tote'}
     threshold = CONFIG['CM_IOU_THRESH']
-    image_shape = CONFIG['IMAGE_SIZE']
-    # if CONFIG['is_pred_bboxes_transposed']: # TODO: CHECK
-    #     reg = transpose_bbox_coor(reg)  # from yxyx to xyxy
-    # else:
-    #     image_shape = image_shape[::-1]
-    # reg_fixed = xyxy_to_xywh_format(reg) # TODO: CHECK
-    reg_fixed = reg
+    # image_shape = CONFIG['IMAGE_SIZE']
+    # reg_fixed = xyxy_to_xywh_format(reg)
     gt_boxes = bb_gt[..., :-1]
     gt_labels = bb_gt[..., -1]
-    # gt_boxes = xyxy_to_xywh_format(gt_boxes) # TODO: CHECK
-    gt_boxes = np.concatenate([
-        gt_boxes[:, :, :2] / image_shape,  # Normalized (x1, y1)
-        gt_boxes[:, :, 2:] / image_shape  # Normalized (w, h)
-    ], axis=2) # TODO: CHECK
-    reg_normalized = tf.concat([
-        reg_fixed[:, :, :2] / image_shape,  # Normalized (x1, y1)
-        reg_fixed[:, :, 2:] / image_shape  # Normalized (w, h)
-    ], axis=2) # TODO: CHECK
-    outputs = DECODER(loc_data=[reg_normalized], conf_data=[cls], prior_data=[None],
+    # gt_boxes = xyxy_to_xywh_format(gt_boxes)
+    # gt_boxes = np.concatenate([
+    #     gt_boxes[:, :, :2] / image_shape,  # Normalized (x1, y1)
+    #     gt_boxes[:, :, 2:] / image_shape  # Normalized (w, h)
+    # ], axis=2)
+    # reg_normalized = tf.concat([
+    #     reg_fixed[:, :, :2] / image_shape,  # Normalized (x1, y1)
+    #     reg_fixed[:, :, 2:] / image_shape  # Normalized (w, h)
+    # ], axis=2)
+    outputs = DECODER(loc_data=[reg], conf_data=[cls], prior_data=[None],
                       from_logits=False, decoded=True)
     ret = []
     for batch_i in range(len(outputs)):
