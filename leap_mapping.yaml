@@ -32,16 +32,15 @@ decorators:
     outputs: {}
   - operation: CustomLoss
     data:
-      type: CustomLoss
       arg_names:
         - bb_gt
         - detection_pred
         - mask_gt
         - segmentation_pred
-      output_name: instance_seg loss
-      selected: instance_seg loss
-      name: instance_seg loss
-      user_unique_name: instance_seg loss
+      user_unique_name: dummy_loss
+      name: dummy_loss
+      selected: dummy_loss
+      type: CustomLoss
     id: '467'
     inputs:
       detection_pred:
@@ -76,9 +75,6 @@ decorators:
     outputs:
       masks:
         - inputKey: mask_gt
-          operation: CustomLoss
-          id: '467'
-        - inputKey: mask_gt
           operation: Visualizer
           id: '471'
         - inputKey: mask_gt
@@ -93,6 +89,9 @@ decorators:
         - inputKey: mask_gt
           operation: Metric
           id: '480'
+        - inputKey: mask_gt
+          operation: CustomLoss
+          id: '467'
   - operation: GroundTruth
     data:
       type: GroundTruth
@@ -101,9 +100,6 @@ decorators:
     inputs: {}
     outputs:
       bbs:
-        - inputKey: bb_gt
-          operation: CustomLoss
-          id: '467'
         - inputKey: bb_gt
           operation: Visualizer
           id: '471'
@@ -122,6 +118,9 @@ decorators:
         - inputKey: bb_gt
           operation: Metric
           id: '480'
+        - inputKey: bb_gt
+          operation: CustomLoss
+          id: '467'
   - operation: Adam
     data:
       type: Optimizer
@@ -161,6 +160,10 @@ decorators:
           operation: Permute
           name: permute_141
           id: '421'
+      image:
+        - outputKey: images
+          operation: Input
+          id: '472'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -169,10 +172,6 @@ decorators:
         - outputKey: bbs
           operation: GroundTruth
           id: '469'
-      image:
-        - outputKey: images
-          operation: Input
-          id: '472'
     outputs: {}
   - operation: Input
     data:
@@ -229,6 +228,10 @@ decorators:
           operation: Permute
           name: permute_141
           id: '421'
+      image:
+        - outputKey: images
+          operation: Input
+          id: '472'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -237,10 +240,6 @@ decorators:
         - outputKey: bbs
           operation: GroundTruth
           id: '469'
-      image:
-        - outputKey: images
-          operation: Input
-          id: '472'
     outputs: {}
   - operation: Visualizer
     data:
@@ -276,14 +275,14 @@ decorators:
       user_unique_name: bb_gt_decoder
     id: '475'
     inputs:
-      bb_gt:
-        - outputKey: bbs
-          operation: GroundTruth
-          id: '469'
       image:
         - outputKey: images
           operation: Input
           id: '472'
+      bb_gt:
+        - outputKey: bbs
+          operation: GroundTruth
+          id: '469'
     outputs: {}
   - operation: Visualizer
     data:
@@ -326,6 +325,10 @@ decorators:
       user_unique_name: gt_mask
     id: '477'
     inputs:
+      image:
+        - outputKey: images
+          operation: Input
+          id: '472'
       masks_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -334,10 +337,6 @@ decorators:
         - outputKey: bbs
           operation: GroundTruth
           id: '469'
-      image:
-        - outputKey: images
-          operation: Input
-          id: '472'
     outputs: {}
   - operation: Metric
     data:
@@ -363,6 +362,10 @@ decorators:
           operation: Permute
           name: permute_141
           id: '421'
+      image:
+        - outputKey: images
+          operation: Input
+          id: '472'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -371,10 +374,6 @@ decorators:
         - outputKey: bbs
           operation: GroundTruth
           id: '469'
-      image:
-        - outputKey: images
-          operation: Input
-          id: '472'
     outputs: {}
   - operation: Metric
     data:
