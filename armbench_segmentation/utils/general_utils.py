@@ -234,16 +234,14 @@ def get_mask_list(data, masks, is_gt):
     else:
         from_logits = not is_inference
         decoded = is_inference
-        class_list_reshaped, loc_list_reshaped = reshape_output_list(
-            np.reshape(data, (1, *data.shape)), decoded=decoded, image_size=CONFIG["IMAGE_SIZE"])
+        class_list_reshaped, loc_list_reshaped = reshape_output_list(np.reshape(data, (1, *data.shape)), decoded=decoded, image_size=CONFIG["IMAGE_SIZE"])
         outputs = DECODER(loc_list_reshaped,
                           class_list_reshaped,
                           DEFAULT_BOXES,
                           from_logits=from_logits,
                           decoded=decoded,
                           )
-        bb_object, mask_list = bb_array_to_object(outputs[0], iscornercoded=True, bg_label=CONFIG["BACKGROUND_LABEL"],
-                                                  masks=masks)
+        bb_object, mask_list = bb_array_to_object(outputs[0], iscornercoded=True, bg_label=CONFIG["BACKGROUND_LABEL"], masks=masks)
     return bb_object, mask_list
 
 
