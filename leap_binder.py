@@ -16,7 +16,7 @@ from armbench_segmentation.data.preprocessing import load_set
 from armbench_segmentation.utils.confusion_matrix import confusion_matrix_metric
 from armbench_segmentation.utils.general_utils import count_obj_masks_occlusions, \
     count_obj_bbox_occlusions, extract_and_cache_bboxes
-from armbench_segmentation.metrics import instance_seg_loss, compute_losses
+from armbench_segmentation.metrics import instance_seg_loss, compute_losses, dummy_loss
 from armbench_segmentation.visualizers.visualizers import gt_bb_decoder, bb_decoder, \
     under_segmented_bb_visualizer, over_segmented_bb_visualizer
 from armbench_segmentation.visualizers.visualizers_getters import mask_visualizer_gt, mask_visualizer_prediction
@@ -419,6 +419,7 @@ leap_binder.add_prediction('object detection',
 leap_binder.add_prediction('segementation masks', [f"mask_{i}" for i in range(32)])
 # set custom loss
 leap_binder.add_custom_loss(instance_seg_loss, 'instance_seg loss')
+leap_binder.add_custom_loss(dummy_loss, 'dummy_loss')
 
 # set visualizers
 leap_binder.set_visualizer(mask_visualizer_gt, 'gt_mask', LeapDataType.ImageMask)
