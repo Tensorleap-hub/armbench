@@ -75,6 +75,9 @@ decorators:
     outputs:
       masks:
         - inputKey: mask_gt
+          operation: CustomLoss
+          id: '467'
+        - inputKey: mask_gt
           operation: Visualizer
           id: '471'
         - inputKey: mask_gt
@@ -89,9 +92,6 @@ decorators:
         - inputKey: mask_gt
           operation: Metric
           id: '480'
-        - inputKey: mask_gt
-          operation: CustomLoss
-          id: '467'
   - operation: GroundTruth
     data:
       type: GroundTruth
@@ -100,6 +100,9 @@ decorators:
     inputs: {}
     outputs:
       bbs:
+        - inputKey: bb_gt
+          operation: CustomLoss
+          id: '467'
         - inputKey: bb_gt
           operation: Visualizer
           id: '471'
@@ -119,8 +122,8 @@ decorators:
           operation: Metric
           id: '480'
         - inputKey: bb_gt
-          operation: CustomLoss
-          id: '467'
+          operation: Metric
+          id: '481'
   - operation: Adam
     data:
       type: Optimizer
@@ -160,10 +163,6 @@ decorators:
           operation: Permute
           name: permute_141
           id: '421'
-      image:
-        - outputKey: images
-          operation: Input
-          id: '472'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -172,6 +171,10 @@ decorators:
         - outputKey: bbs
           operation: GroundTruth
           id: '469'
+      image:
+        - outputKey: images
+          operation: Input
+          id: '472'
     outputs: {}
   - operation: Input
     data:
@@ -228,10 +231,6 @@ decorators:
           operation: Permute
           name: permute_141
           id: '421'
-      image:
-        - outputKey: images
-          operation: Input
-          id: '472'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -240,6 +239,10 @@ decorators:
         - outputKey: bbs
           operation: GroundTruth
           id: '469'
+      image:
+        - outputKey: images
+          operation: Input
+          id: '472'
     outputs: {}
   - operation: Visualizer
     data:
@@ -275,14 +278,14 @@ decorators:
       user_unique_name: bb_gt_decoder
     id: '475'
     inputs:
-      image:
-        - outputKey: images
-          operation: Input
-          id: '472'
       bb_gt:
         - outputKey: bbs
           operation: GroundTruth
           id: '469'
+      image:
+        - outputKey: images
+          operation: Input
+          id: '472'
     outputs: {}
   - operation: Visualizer
     data:
@@ -325,10 +328,6 @@ decorators:
       user_unique_name: gt_mask
     id: '477'
     inputs:
-      image:
-        - outputKey: images
-          operation: Input
-          id: '472'
       masks_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -337,6 +336,10 @@ decorators:
         - outputKey: bbs
           operation: GroundTruth
           id: '469'
+      image:
+        - outputKey: images
+          operation: Input
+          id: '472'
     outputs: {}
   - operation: Metric
     data:
@@ -362,10 +365,6 @@ decorators:
           operation: Permute
           name: permute_141
           id: '421'
-      image:
-        - outputKey: images
-          operation: Input
-          id: '472'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -374,6 +373,10 @@ decorators:
         - outputKey: bbs
           operation: GroundTruth
           id: '469'
+      image:
+        - outputKey: images
+          operation: Input
+          id: '472'
     outputs: {}
   - operation: Metric
     data:
@@ -407,4 +410,26 @@ decorators:
           operation: GroundTruth
           id: '469'
     outputs: {}
+  - operation: Metric
+    data:
+      type: Metric
+      name: Confusion Matrix
+      metric_name: Confusion Matrix
+      arg_names:
+        - bb_gt
+        - y_pred_bb
+      user_unique_name: Confusion Matrix
+    id: '481'
+    inputs:
+      y_pred_bb:
+        - outputKey: merged
+          operation: Concatenate
+          name: output
+          id: '2'
+      bb_gt:
+        - outputKey: bbs
+          operation: GroundTruth
+          id: '469'
+    outputs: {}
 layers: []
+
