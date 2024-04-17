@@ -1,3 +1,4 @@
+
 from code_loader.helpers.detection.utils import xyxy_to_xywh_format
 from code_loader.helpers.detection.yolo.utils import jaccard, xywh_to_xyxy_format
 
@@ -9,7 +10,7 @@ from code_loader.contract.enums import ConfusionMatrixValue
 import tensorflow as tf
 import numpy as np
 from armbench_segmentation.config import CONFIG
-from armbench_segmentation.utils.general_utils import get_mask_list, reshape_output_list
+from armbench_segmentation.utils.general_utils import get_mask_list, reshape_output_list, draw_image_with_boxes
 from armbench_segmentation.yolo_helpers.yolo_utils import DEFAULT_BOXES
 
 
@@ -22,21 +23,19 @@ def transpose_bbox_coor(boxes: Union[NDArray[np.float32], tf.Tensor]) -> Union[N
 
 
 def confusion_matrix_metric(bb_gt: tf.Tensor, y_pred_bb: tf.Tensor):
-
     # assumes we get predictions in xyxy format in gt AND reg
     # assumes gt is in xywh form
 
     is_inference = CONFIG["MODEL_FORMAT"] == "inference"
-    from_logits = not is_inference
     decoded = is_inference
-    class_list_reshaped, loc_list_reshaped = reshape_output_list(y_pred_bb, decoded=decoded, image_size=CONFIG["IMAGE_SIZE"])
+    class_list_reshaped, loc_list_reshaped = reshape_output_list(y_pred_bb, decoded=decoded,
+                                                                 image_size=CONFIG["IMAGE_SIZE"])
     outputs = DECODER(loc_list_reshaped,
                       class_list_reshaped,
                       DEFAULT_BOXES,
                       from_logits=True,
                       decoded=decoded,
                       )
-
     id_to_name = {0: 'Object', 1: 'Tote'}
     threshold = CONFIG['CM_IOU_THRESH']
     gt_boxes = bb_gt[..., :-1]
@@ -46,9 +45,10 @@ def confusion_matrix_metric(bb_gt: tf.Tensor, y_pred_bb: tf.Tensor):
     for batch_i in range(len(outputs)):
         confusion_matrix_elements = []
         if len(outputs[batch_i]) != 0:
-            outs = xyxy_to_xywh_format(outputs[batch_i][:, 1:5])  # FIXED TOM
+            outs = outputs[batch_i][:, 1:5] # FIXED TOM
+            batch_gt_boxes = xywh_to_xyxy_format(gt_boxes[batch_i, :])
             ious = jaccard(outs,
-                           tf.cast(gt_boxes[batch_i, :], tf.double)).numpy()  # (#bb_predicted,#gt)
+                           tf.cast(batch_gt_boxes, tf.double)).numpy()  # (#bb_predicted,#gt) expects bboxes in xyxy format
             prediction_detected = np.any((ious > threshold), axis=1)
             max_iou_ind = np.argmax(ious, axis=1)
             for i, prediction in enumerate(prediction_detected):
