@@ -6,6 +6,7 @@ import tensorflow as tf
 from code_loader.contract.responsedataclasses import BoundingBox
 from code_loader.helpers.detection.utils import xyxy_to_xywh_format, xywh_to_xyxy_format
 from code_loader.helpers.detection.yolo.utils import reshape_output_list
+from matplotlib import patches, pyplot as plt
 from numpy._typing import NDArray
 from armbench_segmentation.config import CONFIG
 from armbench_segmentation.yolo_helpers.yolo_utils import DECODER, DEFAULT_BOXES
@@ -234,8 +235,8 @@ def get_mask_list(data, masks, is_gt):
     else:
         from_logits = not is_inference
         decoded = is_inference
-        class_list_reshaped, loc_list_reshaped = reshape_output_list(
-            np.reshape(data, (1, *data.shape)), decoded=decoded, image_size=CONFIG["IMAGE_SIZE"])
+        class_list_reshaped, loc_list_reshaped = reshape_output_list(np.reshape(data, (1, *data.shape)),
+                                                                     decoded=decoded, image_size=CONFIG["IMAGE_SIZE"])
         outputs = DECODER(loc_list_reshaped,
                           class_list_reshaped,
                           DEFAULT_BOXES,
@@ -290,12 +291,13 @@ def get_argmax_map_and_separate_masks(image, bbs, masks):
         label = bb.label
         instance_number = cats_dict.get(label, 0)
         # update counter if reach max instances we treat the last objects as one
-        cats_dict[label] = instance_number + 1 if instance_number < CONFIG["MAX_INSTANCES_PER_CLASS"] else instance_number
+        cats_dict[label] = instance_number + 1 if instance_number < CONFIG[
+            "MAX_INSTANCES_PER_CLASS"] else instance_number
         label_index = CONFIG["CATEGORIES"].index(label) * CONFIG["MAX_INSTANCES_PER_CLASS"] + cats_dict[label]
         if label == 'Tote':
             empty = argmax_map == 0
-            tote = (argmax_map >= CONFIG["CATEGORIES"].index(label) * CONFIG["MAX_INSTANCES_PER_CLASS"]) &\
-                   (argmax_map < CONFIG["CATEGORIES"].index(label) * (CONFIG["MAX_INSTANCES_PER_CLASS"]+1))
+            tote = (argmax_map >= CONFIG["CATEGORIES"].index(label) * CONFIG["MAX_INSTANCES_PER_CLASS"]) & \
+                   (argmax_map < CONFIG["CATEGORIES"].index(label) * (CONFIG["MAX_INSTANCES_PER_CLASS"] + 1))
             argmax_map[(empty | tote) & resize_mask] = label_index
         else:
             argmax_map[resize_mask] = label_index
@@ -323,3 +325,40 @@ def extract_and_cache_bboxes(idx: int, data: Dict):
         bboxes[i, 4] = class_id
     bboxes[max_anns:, 4] = CONFIG['BACKGROUND_LABEL']
     return bboxes
+
+
+def draw_image_with_boxes(image, bounding_boxes):
+    # Create figure and axes
+    fig, ax = plt.subplots(1)
+
+    # Display the image
+    ax.imshow(image)
+
+    # Draw bounding boxes on the image
+    for bbox in bounding_boxes:
+        x, y, width, height = bbox.x, bbox.y, bbox.width, bbox.height
+        confidence, label = bbox.confidence, bbox.label
+
+        # Convert relative coordinates to absolute coordinates
+        abs_x = x * image.shape[1]
+        abs_y = y * image.shape[0]
+        abs_width = width * image.shape[1]
+        abs_height = height * image.shape[0]
+
+        # Create a rectangle patch
+        rect = patches.Rectangle(
+            (abs_x - abs_width / 2, abs_y - abs_height / 2),
+            abs_width, abs_height,
+            linewidth=2, edgecolor='r', facecolor='none'
+        )
+
+        # Add the rectangle to the axes
+        ax.add_patch(rect)
+
+        # Display label and confidence
+        ax.text(abs_x - abs_width / 2, abs_y - abs_height / 2 - 5,
+                f"{label} {confidence:.2f}", color='r', fontsize=8,
+                bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.3'))
+
+    # Show the image with bounding boxes
+    plt.show()
