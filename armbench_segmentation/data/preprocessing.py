@@ -1,6 +1,7 @@
 import os
 from armbench_segmentation.config import CONFIG
 
+
 def load_set(coco, local_filepath=None, load_union=False):
     # get all images containing given categories
     CATEGORIES = []

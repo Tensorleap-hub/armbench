@@ -13,23 +13,7 @@ decorators:
           id: '144'
         - inputKey: data
           operation: Visualizer
-          id: '451'
-  - operation: Visualizer
-    data:
-      type: Visualizer
-      name: Image
-      visualizer_name: Image
-      visualizer_type: Image
-      arg_names:
-        - data
-      user_unique_name: Image
-    id: '451'
-    inputs:
-      data:
-        - outputKey: images
-          operation: Input
-          id: '145'
-    outputs: {}
+          id: '484'
   - operation: CustomLoss
     data:
       arg_names:
@@ -52,7 +36,7 @@ decorators:
         - outputKey: feature_map
           operation: Permute
           name: permute_141
-          id: '421'
+          id: '425'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -162,7 +146,7 @@ decorators:
         - outputKey: feature_map
           operation: Permute
           name: permute_141
-          id: '421'
+          id: '425'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -230,7 +214,7 @@ decorators:
         - outputKey: feature_map
           operation: Permute
           name: permute_141
-          id: '421'
+          id: '425'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -309,7 +293,7 @@ decorators:
         - outputKey: feature_map
           operation: Permute
           name: permute_141
-          id: '421'
+          id: '425'
       image:
         - outputKey: images
           operation: Input
@@ -364,7 +348,7 @@ decorators:
         - outputKey: feature_map
           operation: Permute
           name: permute_141
-          id: '421'
+          id: '425'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -400,7 +384,7 @@ decorators:
         - outputKey: feature_map
           operation: Permute
           name: permute_141
-          id: '421'
+          id: '425'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -430,6 +414,22 @@ decorators:
         - outputKey: bbs
           operation: GroundTruth
           id: '469'
+    outputs: {}
+  - operation: Visualizer
+    data:
+      type: Visualizer
+      name: Image
+      visualizer_name: Image
+      visualizer_type: Image
+      arg_names:
+        - data
+      user_unique_name: Image_input
+    id: '484'
+    inputs:
+      data:
+        - outputKey: images
+          operation: Input
+          id: '145'
     outputs: {}
 layers: []
 
