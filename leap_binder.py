@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Union, List, Dict, Optional
 import cv2
 import numpy as np
@@ -52,15 +53,25 @@ def subset_images() -> List[PreprocessResponse]:
         # sub_size = min(len(x_raw), CONFIG[f'{sub.upper()}_SIZE'])
         idx = np.random.choice(len(x_raw), len(x_raw), replace=False)
         res.append(PreprocessResponse(length=len(x_raw), data={'cocofile': coco,
-                                                            'samples': np.take(x_raw, idx),
-                                                            'subdir': f'{sub}'}))
+                                                               'samples': np.take(x_raw, idx),
+                                                               'subdir': f'{sub}'}))
     return res
 
 
-def unlabeled_preprocessing_func() -> PreprocessResponse:
-    """
-    This function returns the unlabeled data split in the format expected by tensorleap
-    """
+def _preprocess_unlabeled_data_from_images_folder(images_folder_path: Path) -> PreprocessResponse:
+    image_full_paths = list(images_folder_path.glob('**/*'))
+    np.random.seed(0)
+    unlabeled_indices = np.random.choice(len(image_full_paths), len(image_full_paths), replace=False)
+
+    return PreprocessResponse(
+        length=len(unlabeled_indices),
+        data={
+            'is_unlabeled_from_images': True,
+            'paths': np.take(image_full_paths, unlabeled_indices)
+        })
+
+
+def _preprocess_unlabeled_data_from_coco() -> PreprocessResponse:
     if CONFIG['LOCAL_FLAG'] is False:
         remote_filepath = os.path.join(CONFIG['remote_dir'], f"test.json")
         local_path = _download(remote_filepath)
@@ -73,22 +84,39 @@ def unlabeled_preprocessing_func() -> PreprocessResponse:
     np.random.seed(0)
     test_idx = np.random.choice(len(x_test_raw), len(x_test_raw), replace=False)
     return PreprocessResponse(length=len(x_test_raw), data={'cocofile': test,
-                                                     'samples': np.take(x_test_raw, test_idx),
-                                                     'subdir': 'test'})
+                                                            'samples': np.take(x_test_raw, test_idx),
+                                                            'subdir': 'test'})
+
+
+def unlabeled_preprocessing_func() -> PreprocessResponse:
+    """
+        This function returns the unlabeled data split in the format expected by tensorleap
+    """
+
+    is_unlabeled_data_from_coco = False
+    if is_unlabeled_data_from_coco:
+        return _preprocess_unlabeled_data_from_coco()
+    else:
+        unlabeled_data_images_folder_path = Path(os.path.join(local_filepath, 'images_folder'))
+        return _preprocess_unlabeled_data_from_images_folder(unlabeled_data_images_folder_path)
 
 
 def input_image(idx: int, data: PreprocessResponse) -> np.ndarray:
     """
     Returns a BGR image normalized and padded
     """
-    data = data.data
-    x = data['samples'][idx]
 
-    if CONFIG['LOCAL_FLAG'] is False:
-        remote_filepath = os.path.join(CONFIG['remote_dir'], "images", x['file_name'])
-        local_path = _download(remote_filepath)
+    if data.data.get('is_unlabeled_from_images'):
+        local_path = str(data.data['paths'][idx])
     else:
-        local_path = os.path.join(local_filepath, "images", x['file_name'])
+        data = data.data
+        x = data['samples'][idx]
+        if CONFIG['LOCAL_FLAG'] is False:
+            remote_filepath = os.path.join(CONFIG['remote_dir'], "images", x['file_name'])
+            local_path = _download(remote_filepath)
+        else:
+            local_path = os.path.join(local_filepath, "images", x['file_name'])
+
     # rescale
     image = np.array(
         Image.open(local_path).resize((CONFIG['IMAGE_SIZE'][0], CONFIG['IMAGE_SIZE'][1]), Image.BILINEAR)) / 255.
@@ -310,6 +338,35 @@ def count_small_bbs(bboxes: np.ndarray) -> float:
 
 
 def metadata_dict(idx: int, data: PreprocessResponse) -> Dict[str, Union[float, int, str]]:
+    if data.data.get('is_unlabeled_from_images'):
+        return {
+            "idx": idx,
+            "fname": data.data['paths'][idx].name,
+            "origin_width": 0,
+            "origin_height": 0,
+            "instances_number": 0,
+            "tote_number": 0,
+            "object_number": 0,
+            "avg_instance_size": 0,
+            "tote_instances_mean": 0.0,
+            "tote_instances_std": 0.0,
+            "object_instances_mean": 0.0,
+            "object_instances_std": 0.0,
+            "tote_avg_instance_size": 0,
+            "tote_std_instance_size": 0.0,
+            "object_avg_instance_size": 0,
+            "object_std_instance_size": 0,
+            "bbox_number": 0,
+            "bbox_area": 0.0,
+            "bbox_aspect_ratio": 0.0,
+            "background_percent": 0.0,
+            "duplicate_bb": 0,
+            "small_bbs_number": 0,
+            "count_total_obj_bbox_occlusions": 0,
+            "avg_obj_bbox_occlusions": 0,
+            "count_obj_mask_occlusions": 0
+        }
+
     bbs = get_bbs(idx, data)
     masks = get_masks(idx, data)
     img = input_image(idx, data)
