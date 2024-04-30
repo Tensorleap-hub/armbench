@@ -58,16 +58,14 @@ def subset_images() -> List[PreprocessResponse]:
     return res
 
 
-def _preprocess_unlabeled_data_from_images_folder(images_folder_path: Path) -> PreprocessResponse:
-    image_full_paths = list(images_folder_path.glob('**/*'))
-    np.random.seed(0)
-    unlabeled_indices = np.random.choice(len(image_full_paths), len(image_full_paths), replace=False)
-
+def _preprocess_unlabeled_data_from_images_folder() -> PreprocessResponse:
+    unlabled_data_path = Path(CONFIG['unlabeled_data_path']).absolute()
+    image_full_paths = list(unlabled_data_path.glob('**/*.jpg'))
     return PreprocessResponse(
-        length=len(unlabeled_indices),
+        length=len(image_full_paths),
         data={
             'is_unlabeled_from_images': True,
-            'paths': np.take(image_full_paths, unlabeled_indices)
+            'samples': image_full_paths
         })
 
 
@@ -93,12 +91,10 @@ def unlabeled_preprocessing_func() -> PreprocessResponse:
         This function returns the unlabeled data split in the format expected by tensorleap
     """
 
-    is_unlabeled_data_from_coco = False
-    if is_unlabeled_data_from_coco:
+    if CONFIG['UNLABELED_DATA_FORMAT'] == 'coco':
         return _preprocess_unlabeled_data_from_coco()
     else:
-        unlabeled_data_images_folder_path = Path(os.path.join(local_filepath, 'images_folder'))
-        return _preprocess_unlabeled_data_from_images_folder(unlabeled_data_images_folder_path)
+        return _preprocess_unlabeled_data_from_images_folder()
 
 
 def input_image(idx: int, data: PreprocessResponse) -> np.ndarray:
@@ -107,7 +103,7 @@ def input_image(idx: int, data: PreprocessResponse) -> np.ndarray:
     """
 
     if data.data.get('is_unlabeled_from_images'):
-        local_path = str(data.data['paths'][idx])
+        local_path = str(data.data['samples'][idx])
     else:
         data = data.data
         x = data['samples'][idx]
@@ -338,10 +334,10 @@ def count_small_bbs(bboxes: np.ndarray) -> float:
 
 
 def metadata_dict(idx: int, data: PreprocessResponse) -> Dict[str, Union[float, int, str]]:
-    if data.data.get('is_unlabeled_from_images'):
+    if 'cocofile' not in data.data:
         return {
             "idx": idx,
-            "fname": data.data['paths'][idx].name,
+            "fname": data.data['samples'][idx].name,
             "origin_width": 0,
             "origin_height": 0,
             "instances_number": 0,
