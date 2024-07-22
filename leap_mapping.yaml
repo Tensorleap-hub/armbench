@@ -1,35 +1,4 @@
 decorators:
-  - operation: Input
-    data:
-      type: Input
-      output_name: images
-    id: '145'
-    inputs: {}
-    outputs:
-      images:
-        - inputKey: input
-          operation: Permute
-          name: permute_139
-          id: '144'
-        - inputKey: data
-          operation: Visualizer
-          id: '451'
-  - operation: Visualizer
-    data:
-      type: Visualizer
-      name: Image
-      visualizer_name: Image
-      visualizer_type: Image
-      arg_names:
-        - data
-      user_unique_name: Image
-    id: '451'
-    inputs:
-      data:
-        - outputKey: images
-          operation: Input
-          id: '145'
-    outputs: {}
   - operation: CustomLoss
     data:
       arg_names:
@@ -51,8 +20,8 @@ decorators:
       segmentation_pred:
         - outputKey: feature_map
           operation: Permute
-          name: permute_141
-          id: '421'
+          name: permute_144
+          id: '425'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -75,9 +44,6 @@ decorators:
     outputs:
       masks:
         - inputKey: mask_gt
-          operation: CustomLoss
-          id: '467'
-        - inputKey: mask_gt
           operation: Visualizer
           id: '471'
         - inputKey: mask_gt
@@ -92,6 +58,9 @@ decorators:
         - inputKey: mask_gt
           operation: Metric
           id: '480'
+        - inputKey: mask_gt
+          operation: CustomLoss
+          id: '467'
   - operation: GroundTruth
     data:
       type: GroundTruth
@@ -100,9 +69,6 @@ decorators:
     inputs: {}
     outputs:
       bbs:
-        - inputKey: bb_gt
-          operation: CustomLoss
-          id: '467'
         - inputKey: bb_gt
           operation: Visualizer
           id: '471'
@@ -124,6 +90,9 @@ decorators:
         - inputKey: bb_gt
           operation: Metric
           id: '481'
+        - inputKey: bb_gt
+          operation: CustomLoss
+          id: '467'
   - operation: Adam
     data:
       type: Optimizer
@@ -161,8 +130,8 @@ decorators:
       y_pred_mask:
         - outputKey: feature_map
           operation: Permute
-          name: permute_141
-          id: '421'
+          name: permute_144
+          id: '425'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -229,8 +198,8 @@ decorators:
       y_pred_mask:
         - outputKey: feature_map
           operation: Permute
-          name: permute_141
-          id: '421'
+          name: permute_144
+          id: '425'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -308,8 +277,8 @@ decorators:
       y_pred_mask:
         - outputKey: feature_map
           operation: Permute
-          name: permute_141
-          id: '421'
+          name: permute_144
+          id: '425'
       image:
         - outputKey: images
           operation: Input
@@ -363,8 +332,8 @@ decorators:
       y_pred_mask:
         - outputKey: feature_map
           operation: Permute
-          name: permute_141
-          id: '421'
+          name: permute_144
+          id: '425'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -399,8 +368,8 @@ decorators:
       segmentation_pred:
         - outputKey: feature_map
           operation: Permute
-          name: permute_141
-          id: '421'
+          name: permute_144
+          id: '425'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
@@ -431,5 +400,36 @@ decorators:
           operation: GroundTruth
           id: '469'
     outputs: {}
+  - operation: Input
+    data:
+      type: Input
+      output_name: images
+      selected: images
+    id: '482'
+    inputs: {}
+    outputs:
+      images:
+        - inputKey: input
+          operation: Permute
+          name: permute_142
+          id: '144'
+        - inputKey: data
+          operation: Visualizer
+          id: '483'
+  - operation: Visualizer
+    data:
+      type: Visualizer
+      name: Image
+      visualizer_name: Image
+      visualizer_type: Image
+      arg_names:
+        - data
+      user_unique_name: Image
+    id: '483'
+    inputs:
+      data:
+        - outputKey: images
+          operation: Input
+          id: '482'
+    outputs: {}
 layers: []
-
