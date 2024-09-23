@@ -211,9 +211,9 @@ decorators:
         - detection_pred
         - mask_gt
         - segmentation_pred
-      user_unique_name: dummy_loss
-      name: dummy_loss
-      selected: dummy_loss
+      user_unique_name: instance_seg loss
+      name: instance_seg loss
+      selected: instance_seg loss
       type: CustomLoss
     id: '464'
     inputs:
