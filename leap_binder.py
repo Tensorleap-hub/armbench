@@ -409,14 +409,6 @@ def segmentation_metrics_dict(image: tf.Tensor, y_pred_bb: tf.Tensor, y_pred_mas
 
 
 # ---------------------------------------------------------binding------------------------------------------------------
-# preprocess function
-# leap_binder.set_preprocess(subset_images)
-# unlabeled data preprocess
-# leap_binder.set_unlabeled_data_preprocess(function=unlabeled_preprocessing_func)
-# set input and gt
-# leap_binder.set_input(input_image, 'images')
-# leap_binder.set_ground_truth(get_bbs, 'bbs')
-# leap_binder.set_ground_truth(get_masks, 'masks')
 # set prediction (object)
 leap_binder.add_prediction('object detection',
                            ["x", "y", "w", "h", "obj"] +
@@ -425,25 +417,7 @@ leap_binder.add_prediction('object detection',
 
 # set prediction (segmentation)
 leap_binder.add_prediction('segementation masks', [f"mask_{i}" for i in range(32)])
-# set custom loss
-# leap_binder.add_custom_loss(instance_seg_loss, 'instance_seg loss')
-# leap_binder.add_custom_loss(dummy_loss, 'dummy_loss')
 
-# set visualizers
-# leap_binder.set_visualizer(mask_visualizer_gt, 'gt_mask', LeapDataType.ImageMask)
-# leap_binder.set_visualizer(mask_visualizer_prediction, 'pred_mask', LeapDataType.ImageMask)
-# leap_binder.set_visualizer(gt_bb_decoder, 'bb_gt_decoder', LeapDataType.ImageWithBBox)
-# leap_binder.set_visualizer(bb_decoder, 'bb_decoder', LeapDataType.ImageWithBBox)
-# leap_binder.set_visualizer(under_segmented_bb_visualizer, 'under segment', LeapDataType.ImageWithBBox)
-# leap_binder.set_visualizer(over_segmented_bb_visualizer, 'over segment', LeapDataType.ImageWithBBox)
-
-# set custom metrics
-# leap_binder.add_custom_metric(general_metrics_dict, 'general_metrics')
-# leap_binder.add_custom_metric(segmentation_metrics_dict, 'segmentation_metrics')
-# leap_binder.add_custom_metric(confusion_matrix_metric, "Confusion Matrix")
-
-# set metadata
-# leap_binder.set_metadata(metadata_dict, name='metadata')
 
 if __name__ == '__main__':
     leap_binder.check()
