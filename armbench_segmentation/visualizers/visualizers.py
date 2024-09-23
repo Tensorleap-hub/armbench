@@ -4,8 +4,11 @@ from code_loader.contract.visualizer_classes import LeapImageWithBBox
 from armbench_segmentation.utils.general_utils import get_mask_list, remove_label_from_bbs
 from armbench_segmentation.utils.ioa_utils import get_ioa_array
 
+from code_loader.inner_leap_binder.leapbinder_decorators import *
+
 
 # Visualizers
+@tensorleap_custom_visualizer('bb_decoder', LeapDataType.ImageWithBBox)
 def bb_decoder(image, bb_prediction):
     """
     Overlays the BB predictions on the image
@@ -14,11 +17,12 @@ def bb_decoder(image, bb_prediction):
     return LeapImageWithBBox((image * 255).astype(np.float32), bb_object)
 
 
+@tensorleap_custom_visualizer('bb_gt_decoder', LeapDataType.ImageWithBBox)
 def gt_bb_decoder(image, bb_gt) -> LeapImageWithBBox:
     bb_object, _ = get_mask_list(bb_gt, None, is_gt=True)
     return LeapImageWithBBox((image * 255).astype(np.float32), bb_object)
 
-
+@tensorleap_custom_visualizer('under segment', LeapDataType.ImageWithBBox)
 def under_segmented_bb_visualizer(image, y_pred_bb, y_pred_mask, bb_gt, mask_gt):  # bb_visualizer + gt_visualizer
     th = 0.8
     ioas = get_ioa_array(image, y_pred_bb, y_pred_mask, bb_gt, mask_gt, containing='pred')
@@ -34,6 +38,7 @@ def under_segmented_bb_visualizer(image, y_pred_bb, y_pred_mask, bb_gt, mask_gt)
     return LeapImageWithBBox((image * 255).astype(np.float32), new_bb_array)
 
 
+@tensorleap_custom_visualizer('over segment', LeapDataType.ImageWithBBox)
 def over_segmented_bb_visualizer(image, y_pred_bb, y_pred_mask, bb_gt, mask_gt):  # bb_visualizer + gt_visualizer
     th = 0.8
     ioas = get_ioa_array(image, y_pred_bb, y_pred_mask, bb_gt, mask_gt, containing='gt')

@@ -9,26 +9,200 @@ decorators:
       images:
         - inputKey: input
           operation: Permute
-          name: permute_139
+          name: permute_133
           id: '144'
+        - inputKey: image
+          operation: Visualizer
+          id: '462'
+        - inputKey: image
+          operation: Metric
+          id: '463'
         - inputKey: data
           operation: Visualizer
-          id: '451'
+          id: '466'
+        - inputKey: image
+          operation: Visualizer
+          id: '467'
+        - inputKey: image
+          operation: Visualizer
+          id: '468'
+        - inputKey: image
+          operation: Visualizer
+          id: '469'
+        - inputKey: image
+          operation: Visualizer
+          id: '470'
+        - inputKey: image
+          operation: Visualizer
+          id: '471'
+  - operation: GroundTruth
+    data:
+      type: GroundTruth
+      output_name: bbs
+    id: '458'
+    inputs: {}
+    outputs:
+      bbs:
+        - inputKey: bb_gt
+          operation: Metric
+          id: '459'
+        - inputKey: bb_gt
+          operation: Metric
+          id: '460'
+        - inputKey: bb_gt
+          operation: Visualizer
+          id: '462'
+        - inputKey: bb_gt
+          operation: Metric
+          id: '463'
+        - inputKey: bb_gt
+          operation: Visualizer
+          id: '468'
+        - inputKey: bb_gt
+          operation: Visualizer
+          id: '470'
+        - inputKey: bb_gt
+          operation: Visualizer
+          id: '471'
+        - inputKey: bb_gt
+          operation: CustomLoss
+          id: '464'
+  - operation: Metric
+    data:
+      type: Metric
+      name: Confusion Matrix
+      metric_name: Confusion Matrix
+      arg_names:
+        - bb_gt
+        - y_pred_bb
+      user_unique_name: Confusion Matrix
+    id: '459'
+    inputs:
+      y_pred_bb:
+        - outputKey: merged
+          operation: Concatenate
+          name: Concat_329_tl_concat_2
+          id: '2'
+      bb_gt:
+        - outputKey: bbs
+          operation: GroundTruth
+          id: '458'
+    outputs: {}
+  - operation: Metric
+    data:
+      type: Metric
+      name: general_metrics
+      metric_name: general_metrics
+      arg_names:
+        - bb_gt
+        - detection_pred
+        - mask_gt
+        - segmentation_pred
+      user_unique_name: general_metrics
+    id: '460'
+    inputs:
+      detection_pred:
+        - outputKey: merged
+          operation: Concatenate
+          name: Concat_329_tl_concat_2
+          id: '2'
+      segmentation_pred:
+        - outputKey: feature_map
+          operation: Permute
+          name: permute_135
+          id: '425'
+      bb_gt:
+        - outputKey: bbs
+          operation: GroundTruth
+          id: '458'
+      mask_gt:
+        - outputKey: masks
+          operation: GroundTruth
+          id: '461'
+    outputs: {}
+  - operation: GroundTruth
+    data:
+      type: GroundTruth
+      output_name: masks
+    id: '461'
+    inputs: {}
+    outputs:
+      masks:
+        - inputKey: mask_gt
+          operation: Metric
+          id: '460'
+        - inputKey: mask_gt
+          operation: Metric
+          id: '463'
+        - inputKey: masks_gt
+          operation: Visualizer
+          id: '468'
+        - inputKey: mask_gt
+          operation: Visualizer
+          id: '470'
+        - inputKey: mask_gt
+          operation: Visualizer
+          id: '471'
+        - inputKey: mask_gt
+          operation: CustomLoss
+          id: '464'
   - operation: Visualizer
     data:
       type: Visualizer
-      name: Image
-      visualizer_name: Image
-      visualizer_type: Image
+      name: bb_gt_decoder
+      visualizer_name: bb_gt_decoder
+      visualizer_type: ImageWithBBox
       arg_names:
-        - data
-      user_unique_name: Image
-    id: '451'
+        - image
+        - bb_gt
+      user_unique_name: bb_gt_decoder
+    id: '462'
     inputs:
-      data:
+      image:
         - outputKey: images
           operation: Input
           id: '145'
+      bb_gt:
+        - outputKey: bbs
+          operation: GroundTruth
+          id: '458'
+    outputs: {}
+  - operation: Metric
+    data:
+      type: Metric
+      name: segmentation_metrics
+      metric_name: segmentation_metrics
+      arg_names:
+        - image
+        - y_pred_bb
+        - y_pred_mask
+        - bb_gt
+        - mask_gt
+      user_unique_name: segmentation_metrics
+    id: '463'
+    inputs:
+      y_pred_bb:
+        - outputKey: merged
+          operation: Concatenate
+          name: Concat_329_tl_concat_2
+          id: '2'
+      image:
+        - outputKey: images
+          operation: Input
+          id: '145'
+      y_pred_mask:
+        - outputKey: feature_map
+          operation: Permute
+          name: permute_135
+          id: '425'
+      bb_gt:
+        - outputKey: bbs
+          operation: GroundTruth
+          id: '458'
+      mask_gt:
+        - outputKey: masks
+          operation: GroundTruth
+          id: '461'
     outputs: {}
   - operation: CustomLoss
     data:
@@ -41,102 +215,172 @@ decorators:
       name: dummy_loss
       selected: dummy_loss
       type: CustomLoss
-    id: '467'
+    id: '464'
     inputs:
       detection_pred:
         - outputKey: merged
           operation: Concatenate
-          name: output
+          name: Concat_329_tl_concat_2
           id: '2'
       segmentation_pred:
         - outputKey: feature_map
           operation: Permute
-          name: permute_141
-          id: '421'
-      mask_gt:
-        - outputKey: masks
-          operation: GroundTruth
-          id: '468'
+          name: permute_135
+          id: '425'
       bb_gt:
         - outputKey: bbs
           operation: GroundTruth
-          id: '469'
+          id: '458'
+      mask_gt:
+        - outputKey: masks
+          operation: GroundTruth
+          id: '461'
     outputs:
       loss:
         - inputKey: '0'
           operation: Adam
-          id: '470'
-  - operation: GroundTruth
-    data:
-      type: GroundTruth
-      output_name: masks
-    id: '468'
-    inputs: {}
-    outputs:
-      masks:
-        - inputKey: mask_gt
-          operation: CustomLoss
-          id: '467'
-        - inputKey: mask_gt
-          operation: Visualizer
-          id: '471'
-        - inputKey: mask_gt
-          operation: Visualizer
-          id: '473'
-        - inputKey: masks_gt
-          operation: Visualizer
-          id: '477'
-        - inputKey: mask_gt
-          operation: Metric
-          id: '479'
-        - inputKey: mask_gt
-          operation: Metric
-          id: '480'
-  - operation: GroundTruth
-    data:
-      type: GroundTruth
-      output_name: bbs
-    id: '469'
-    inputs: {}
-    outputs:
-      bbs:
-        - inputKey: bb_gt
-          operation: CustomLoss
-          id: '467'
-        - inputKey: bb_gt
-          operation: Visualizer
-          id: '471'
-        - inputKey: bb_gt
-          operation: Visualizer
-          id: '473'
-        - inputKey: bb_gt
-          operation: Visualizer
-          id: '475'
-        - inputKey: bb_gt
-          operation: Visualizer
-          id: '477'
-        - inputKey: bb_gt
-          operation: Metric
-          id: '479'
-        - inputKey: bb_gt
-          operation: Metric
-          id: '480'
-        - inputKey: bb_gt
-          operation: Metric
-          id: '481'
+          id: '465'
   - operation: Adam
     data:
       type: Optimizer
       custom_input_keys:
-        - 470-0
-      arg_names:
-        - '0'
-    id: '470'
+        - 465-0
+    id: '465'
     inputs:
       '0':
         - outputKey: loss
           operation: CustomLoss
-          id: '467'
+          id: '464'
+    outputs: {}
+  - operation: Visualizer
+    data:
+      type: Visualizer
+      name: Image
+      visualizer_name: Image
+      visualizer_type: Image
+      arg_names:
+        - data
+      user_unique_name: Image
+    id: '466'
+    inputs:
+      data:
+        - outputKey: images
+          operation: Input
+          id: '145'
+    outputs: {}
+  - operation: Visualizer
+    data:
+      type: Visualizer
+      name: pred_mask
+      visualizer_name: pred_mask
+      visualizer_type: ImageMask
+      arg_names:
+        - image
+        - y_pred_bbs
+        - y_pred_mask
+      user_unique_name: pred_mask
+    id: '467'
+    inputs:
+      y_pred_bbs:
+        - outputKey: merged
+          operation: Concatenate
+          name: Concat_329_tl_concat_2
+          id: '2'
+      image:
+        - outputKey: images
+          operation: Input
+          id: '145'
+      y_pred_mask:
+        - outputKey: feature_map
+          operation: Permute
+          name: permute_135
+          id: '425'
+    outputs: {}
+  - operation: Visualizer
+    data:
+      type: Visualizer
+      name: gt_mask
+      visualizer_name: gt_mask
+      visualizer_type: ImageMask
+      arg_names:
+        - image
+        - bb_gt
+        - masks_gt
+      user_unique_name: gt_mask
+    id: '468'
+    inputs:
+      image:
+        - outputKey: images
+          operation: Input
+          id: '145'
+      bb_gt:
+        - outputKey: bbs
+          operation: GroundTruth
+          id: '458'
+      masks_gt:
+        - outputKey: masks
+          operation: GroundTruth
+          id: '461'
+    outputs: {}
+  - operation: Visualizer
+    data:
+      type: Visualizer
+      name: bb_decoder
+      visualizer_name: bb_decoder
+      visualizer_type: ImageWithBBox
+      arg_names:
+        - image
+        - bb_prediction
+      user_unique_name: bb_decoder
+    id: '469'
+    inputs:
+      bb_prediction:
+        - outputKey: merged
+          operation: Concatenate
+          name: Concat_329_tl_concat_2
+          id: '2'
+      image:
+        - outputKey: images
+          operation: Input
+          id: '145'
+    outputs: {}
+  - operation: Visualizer
+    data:
+      type: Visualizer
+      name: under segment
+      visualizer_name: under segment
+      visualizer_type: ImageWithBBox
+      arg_names:
+        - image
+        - y_pred_bb
+        - y_pred_mask
+        - bb_gt
+        - mask_gt
+      user_unique_name: under segment
+    id: '470'
+    inputs:
+      y_pred_bb:
+        - outputKey: merged
+          operation: Concatenate
+          name: Concat_329_tl_concat_2
+          id: '2'
+      image:
+        - outputKey: images
+          operation: Input
+          id: '145'
+      y_pred_mask:
+        - outputKey: feature_map
+          operation: Permute
+          name: permute_135
+          id: '425'
+      bb_gt:
+        - outputKey: bbs
+          operation: GroundTruth
+          id: '458'
+      mask_gt:
+        - outputKey: masks
+          operation: GroundTruth
+          id: '461'
     outputs: {}
   - operation: Visualizer
     data:
@@ -156,280 +400,24 @@ decorators:
       y_pred_bb:
         - outputKey: merged
           operation: Concatenate
-          name: output
+          name: Concat_329_tl_concat_2
           id: '2'
+      image:
+        - outputKey: images
+          operation: Input
+          id: '145'
       y_pred_mask:
         - outputKey: feature_map
           operation: Permute
-          name: permute_141
-          id: '421'
+          name: permute_135
+          id: '425'
+      bb_gt:
+        - outputKey: bbs
+          operation: GroundTruth
+          id: '458'
       mask_gt:
         - outputKey: masks
           operation: GroundTruth
-          id: '468'
-      bb_gt:
-        - outputKey: bbs
-          operation: GroundTruth
-          id: '469'
-      image:
-        - outputKey: images
-          operation: Input
-          id: '472'
-    outputs: {}
-  - operation: Input
-    data:
-      type: Input
-      output_name: images
-      selected: images
-    id: '472'
-    inputs: {}
-    outputs:
-      images:
-        - inputKey: image
-          operation: Visualizer
-          id: '471'
-        - inputKey: image
-          operation: Visualizer
-          id: '473'
-        - inputKey: image
-          operation: Visualizer
-          id: '474'
-        - inputKey: image
-          operation: Visualizer
-          id: '475'
-        - inputKey: image
-          operation: Visualizer
-          id: '476'
-        - inputKey: image
-          operation: Visualizer
-          id: '477'
-        - inputKey: image
-          operation: Metric
-          id: '479'
-  - operation: Visualizer
-    data:
-      type: Visualizer
-      name: under segment
-      visualizer_name: under segment
-      visualizer_type: ImageWithBBox
-      arg_names:
-        - image
-        - y_pred_bb
-        - y_pred_mask
-        - bb_gt
-        - mask_gt
-      user_unique_name: under segment
-    id: '473'
-    inputs:
-      y_pred_bb:
-        - outputKey: merged
-          operation: Concatenate
-          name: output
-          id: '2'
-      y_pred_mask:
-        - outputKey: feature_map
-          operation: Permute
-          name: permute_141
-          id: '421'
-      mask_gt:
-        - outputKey: masks
-          operation: GroundTruth
-          id: '468'
-      bb_gt:
-        - outputKey: bbs
-          operation: GroundTruth
-          id: '469'
-      image:
-        - outputKey: images
-          operation: Input
-          id: '472'
-    outputs: {}
-  - operation: Visualizer
-    data:
-      type: Visualizer
-      name: bb_decoder
-      visualizer_name: bb_decoder
-      visualizer_type: ImageWithBBox
-      arg_names:
-        - image
-        - bb_prediction
-      user_unique_name: bb_decoder
-    id: '474'
-    inputs:
-      bb_prediction:
-        - outputKey: merged
-          operation: Concatenate
-          name: output
-          id: '2'
-      image:
-        - outputKey: images
-          operation: Input
-          id: '472'
-    outputs: {}
-  - operation: Visualizer
-    data:
-      type: Visualizer
-      name: bb_gt_decoder
-      visualizer_name: bb_gt_decoder
-      visualizer_type: ImageWithBBox
-      arg_names:
-        - image
-        - bb_gt
-      user_unique_name: bb_gt_decoder
-    id: '475'
-    inputs:
-      bb_gt:
-        - outputKey: bbs
-          operation: GroundTruth
-          id: '469'
-      image:
-        - outputKey: images
-          operation: Input
-          id: '472'
-    outputs: {}
-  - operation: Visualizer
-    data:
-      type: Visualizer
-      name: pred_mask
-      visualizer_name: pred_mask
-      visualizer_type: ImageMask
-      arg_names:
-        - image
-        - y_pred_bbs
-        - y_pred_mask
-      user_unique_name: pred_mask
-    id: '476'
-    inputs:
-      y_pred_bbs:
-        - outputKey: merged
-          operation: Concatenate
-          name: output
-          id: '2'
-      y_pred_mask:
-        - outputKey: feature_map
-          operation: Permute
-          name: permute_141
-          id: '421'
-      image:
-        - outputKey: images
-          operation: Input
-          id: '472'
-    outputs: {}
-  - operation: Visualizer
-    data:
-      type: Visualizer
-      name: gt_mask
-      visualizer_name: gt_mask
-      visualizer_type: ImageMask
-      arg_names:
-        - image
-        - bb_gt
-        - masks_gt
-      user_unique_name: gt_mask
-    id: '477'
-    inputs:
-      masks_gt:
-        - outputKey: masks
-          operation: GroundTruth
-          id: '468'
-      bb_gt:
-        - outputKey: bbs
-          operation: GroundTruth
-          id: '469'
-      image:
-        - outputKey: images
-          operation: Input
-          id: '472'
-    outputs: {}
-  - operation: Metric
-    data:
-      type: Metric
-      name: segmentation_metrics
-      metric_name: segmentation_metrics
-      arg_names:
-        - image
-        - y_pred_bb
-        - y_pred_mask
-        - bb_gt
-        - mask_gt
-      user_unique_name: segmentation_metrics
-    id: '479'
-    inputs:
-      y_pred_bb:
-        - outputKey: merged
-          operation: Concatenate
-          name: output
-          id: '2'
-      y_pred_mask:
-        - outputKey: feature_map
-          operation: Permute
-          name: permute_141
-          id: '421'
-      mask_gt:
-        - outputKey: masks
-          operation: GroundTruth
-          id: '468'
-      bb_gt:
-        - outputKey: bbs
-          operation: GroundTruth
-          id: '469'
-      image:
-        - outputKey: images
-          operation: Input
-          id: '472'
-    outputs: {}
-  - operation: Metric
-    data:
-      type: Metric
-      name: general_metrics
-      metric_name: general_metrics
-      arg_names:
-        - bb_gt
-        - detection_pred
-        - mask_gt
-        - segmentation_pred
-      user_unique_name: general_metrics
-    id: '480'
-    inputs:
-      detection_pred:
-        - outputKey: merged
-          operation: Concatenate
-          name: output
-          id: '2'
-      segmentation_pred:
-        - outputKey: feature_map
-          operation: Permute
-          name: permute_141
-          id: '421'
-      mask_gt:
-        - outputKey: masks
-          operation: GroundTruth
-          id: '468'
-      bb_gt:
-        - outputKey: bbs
-          operation: GroundTruth
-          id: '469'
-    outputs: {}
-  - operation: Metric
-    data:
-      type: Metric
-      name: Confusion Matrix
-      metric_name: Confusion Matrix
-      arg_names:
-        - bb_gt
-        - y_pred_bb
-      user_unique_name: Confusion Matrix
-    id: '481'
-    inputs:
-      y_pred_bb:
-        - outputKey: merged
-          operation: Concatenate
-          name: output
-          id: '2'
-      bb_gt:
-        - outputKey: bbs
-          operation: GroundTruth
-          id: '469'
+          id: '461'
     outputs: {}
 layers: []
-

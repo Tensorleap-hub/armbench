@@ -8,6 +8,7 @@ from armbench_segmentation.config import CONFIG
 from armbench_segmentation.utils.general_utils import remove_label_from_bbs
 from armbench_segmentation.yolo_helpers.yolo_utils import LOSS_FN
 from code_loader.contract.responsedataclasses import BoundingBox
+from code_loader.inner_leap_binder.leapbinder_decorators import *
 
 
 def compute_losses(obj_true: tf.Tensor, od_pred: tf.Tensor,
@@ -25,12 +26,13 @@ def compute_losses(obj_true: tf.Tensor, od_pred: tf.Tensor,
     return loss_l, loss_c, loss_o, loss_m
 
 
-
-
+@tensorleap_custom_loss('dummy_loss')
 def dummy_loss(bb_gt: tf.Tensor, detection_pred: tf.Tensor,
                mask_gt: tf.Tensor, segmentation_pred: tf.Tensor):
     return 0
 
+
+@tensorleap_custom_loss('instance_seg loss')
 def instance_seg_loss(bb_gt: tf.Tensor, detection_pred: tf.Tensor,
                       mask_gt: tf.Tensor, segmentation_pred: tf.Tensor):  # return batch
     """

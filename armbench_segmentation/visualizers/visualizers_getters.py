@@ -2,8 +2,10 @@ from armbench_segmentation.utils.general_utils import get_mask_list, get_argmax_
 import numpy as np
 from armbench_segmentation.config import CONFIG
 from code_loader.contract.visualizer_classes import LeapImageMask
+from code_loader.inner_leap_binder.leapbinder_decorators import *
 
 
+@tensorleap_custom_visualizer('gt_mask', LeapDataType.ImageMask)
 def mask_visualizer_gt(image, bb_gt, masks_gt):
     bbs, masks = get_mask_list(bb_gt, masks_gt, is_gt=True)
     argmax_arr = get_argmax_map_and_separate_masks(image, bbs, masks)["argmax_map"].astype(np.uint8)
@@ -11,6 +13,7 @@ def mask_visualizer_gt(image, bb_gt, masks_gt):
                          labels=CONFIG['INSTANCES'] + ["background"])
 
 
+@tensorleap_custom_visualizer('pred_mask', LeapDataType.ImageMask)
 def mask_visualizer_prediction(image, y_pred_bbs, y_pred_mask):
     bbs, masks = get_mask_list(y_pred_bbs, y_pred_mask, is_gt=False)
     argmax_arr = get_argmax_map_and_separate_masks(image, bbs, masks)["argmax_map"].astype(np.uint8)

@@ -2,6 +2,7 @@ import os
 import urllib
 from os.path import exists
 
+import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from armbench_segmentation.utils.confusion_matrix import confusion_matrix_metric
@@ -25,7 +26,7 @@ def check_integration():
             "https://storage.googleapis.com/example-datasets-47ml982d/yolov5/yolov5.h5",
             model_path)
     model = tf.keras.models.load_model(model_path)
-    batch = 1 #64
+    batch = 1  # 64
     responses = subset_images()  # get dataset splits
     training_response = responses[0]  # [training, validation, test]
     unlabeled_data = unlabeled_preprocessing_func()
@@ -44,30 +45,42 @@ def check_integration():
     y_pred_bbs = y_pred[0]
     y_pred_masks = y_pred[1]
     res = instance_seg_loss(y_true_bbs, y_pred_bbs, y_true_masks, y_pred_masks)
-    cm = confusion_matrix_metric(y_true_bbs, y_pred_bbs)
-    segmentation_metrics_results = segmentation_metrics_dict(input_img_tf, y_pred_bbs, y_pred_masks, y_true_bbs,
-                                                             y_true_masks)
+    cm = confusion_matrix_metric(y_true_bbs.numpy(), y_pred_bbs.numpy())
+    segmentation_metrics_results = segmentation_metrics_dict(
+        input_img_tf.numpy().astype(np.float32), y_pred_bbs.numpy().astype(np.float32),
+        y_pred_masks.numpy().astype(np.float32), y_true_bbs.numpy().astype(np.float32),
+        y_true_masks.numpy().astype(np.float32))
 
     y_pred_bb_concat = tf.keras.layers.Permute((2, 1))(y_pred_bbs)  # prepare prediction for further use
 
-
     # custom metrics
-    general_metric_results = general_metrics_dict(y_true_bbs, y_pred_bbs, y_true_masks, y_pred_masks)
-    segmentation_metrics_results = segmentation_metrics_dict(input_img_tf, y_pred_bbs, y_pred_masks, y_true_bbs,
-                                                             y_true_masks)
+    general_metric_results = general_metrics_dict(y_true_bbs.numpy().astype(np.float32),
+                                                  y_pred_bbs.numpy().astype(np.float32),
+                                                  y_true_masks.numpy().astype(np.float32),
+                                                  y_pred_masks.numpy().astype(np.float32))
+    segmentation_metrics_results = segmentation_metrics_dict(input_img_tf.numpy().astype(np.float32),
+                                                             y_pred_bbs.numpy().astype(np.float32),
+                                                             y_pred_masks.numpy().astype(np.float32),
+                                                             y_true_bbs.numpy().astype(np.float32),
+                                                             y_true_masks.numpy().astype(np.float32))
 
     # visualizers
     #
-    gt_mask_visualizer_img = mask_visualizer_gt(images[0], y_true_bbs[0, ...], y_true_masks[0, ...])
-    predicted_mask_visualizer_img = mask_visualizer_prediction(images[0], y_pred_bbs[0, ...], y_pred_masks[0, ...])
-    predicted_bboxes_img = bb_decoder(images[0], y_pred_bbs[0, ...])
+    gt_mask_visualizer_img = mask_visualizer_gt(images[0],
+                                                y_true_bbs[0, ...].numpy().astype(np.float32),
+                                                y_true_masks[0, ...].numpy().astype(np.float32))
+    predicted_mask_visualizer_img = mask_visualizer_prediction(
+        images[0],
+        y_pred_bbs[0, ...].numpy().astype(np.float32),
+        y_pred_masks[0, ...].numpy().astype(np.float32))
+    predicted_bboxes_img = bb_decoder(images[0], y_pred_bbs[0, ...].numpy().astype(np.float32))
     draw_image_with_boxes(image=predicted_bboxes_img.data / 255, bounding_boxes=predicted_bboxes_img.bounding_boxes)
-    gt_bboxes_img = gt_bb_decoder(images[0], y_true_bbs[0, ...])
+    gt_bboxes_img = gt_bb_decoder(images[0], y_true_bbs[0, ...].numpy().astype(np.float32))
     draw_image_with_boxes(image=gt_bboxes_img.data / 255, bounding_boxes=gt_bboxes_img.bounding_boxes)
-    under_segmented_img = under_segmented_bb_visualizer(images[0], y_pred_bbs[0, ...], y_pred_masks[0, ...],
-                                                        y_true_bbs[0, ...], y_true_masks[0, ...])
-    over_segmented_img = over_segmented_bb_visualizer(images[0], y_pred_bbs[0, ...], y_pred_masks[0, ...],
-                                                      y_true_bbs[0, ...], y_true_masks[0, ...])
+    under_segmented_img = under_segmented_bb_visualizer(images[0], y_pred_bbs[0, ...].numpy().astype(np.float32), y_pred_masks[0, ...].numpy().astype(np.float32),
+                                                        y_true_bbs[0, ...].numpy().astype(np.float32), y_true_masks[0, ...].numpy().astype(np.float32))
+    over_segmented_img = over_segmented_bb_visualizer(images[0], y_pred_bbs[0, ...].numpy().astype(np.float32), y_pred_masks[0, ...].numpy().astype(np.float32),
+                                                      y_true_bbs[0, ...].numpy().astype(np.float32), y_true_masks[0, ...].numpy().astype(np.float32))
     # metadata functions
     metadata = metadata_dict(idx, training_response)
 
