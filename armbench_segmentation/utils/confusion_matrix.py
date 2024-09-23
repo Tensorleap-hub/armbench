@@ -22,8 +22,8 @@ def transpose_bbox_coor(boxes: Union[NDArray[np.float32], tf.Tensor]) -> Union[N
     return result
 
 
-@tensorleap_custom_metric('"Confusion Matrix"')
-def confusion_matrix_metric(bb_gt: tf.Tensor, y_pred_bb: tf.Tensor):
+@tensorleap_custom_metric('Confusion Matrix')
+def confusion_matrix_metric(bb_gt: np.array, y_pred_bb: np.array):
     # assumes we get predictions in xyxy format in gt AND reg
     # assumes gt is in xywh form
 

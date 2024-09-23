@@ -368,10 +368,10 @@ def general_metrics_dict(bb_gt: tf.Tensor, detection_pred: tf.Tensor,
         fault_res_tensor = [tf.convert_to_tensor(-np.ones((batch_dim, 1))) for _ in range(3)]
         reg_met, class_met, obj_met, mask_met = (fault_res_tensor, fault_res_tensor, fault_res_tensor, fault_res_tensor)
     res = {
-        "Regression_metric": tf.reduce_sum(reg_met, axis=0)[:, 0],
-        "Classification_metric": tf.reduce_sum(class_met, axis=0)[:, 0],
-        "Objectness_metric": tf.reduce_sum(obj_met, axis=0)[:, 0],
-        "Mask_metric": tf.reduce_sum(mask_met, axis=0)[:, 0],
+        "Regression_metric": tf.reduce_sum(reg_met, axis=0)[:, 0].numpy().astype(np.float32),
+        "Classification_metric": tf.reduce_sum(class_met, axis=0)[:, 0].numpy().astype(np.float32),
+        "Objectness_metric": tf.reduce_sum(obj_met, axis=0)[:, 0].numpy().astype(np.float32),
+        "Mask_metric": tf.reduce_sum(mask_met, axis=0)[:, 0].numpy().astype(np.float32),
     }
     return res
 
@@ -396,14 +396,14 @@ def segmentation_metrics_dict(image: tf.Tensor, y_pred_bb: tf.Tensor, y_pred_mas
     under_seg_bool, under_seg_count, avg_segments_under, under_small_bb, _ = \
         over_under_segmented_metrics(pred_gt_ioas, count_small_bbs=True, bb_mask_object_list=bb_mask_gt)
     res = {
-        "Over_Segmented_metric": over_seg_bool,
-        "Under_Segmented_metric": under_seg_bool,
-        "Small_BB_Under_Segmtented": under_small_bb,
-        "Over_Segmented_Instances_count": over_seg_count,
-        "Under_Segmented_Instances_count": under_seg_count,
-        "Average_segments_num_Over_Segmented": avg_segments_over,
-        "Average_segments_num_Under_Segmented": avg_segments_under,
-        "Over_Segment_confidences": over_conf
+        "Over_Segmented_metric": over_seg_bool.numpy().astype(np.float32),
+        "Under_Segmented_metric": under_seg_bool.numpy().astype(np.float32),
+        "Small_BB_Under_Segmtented": under_small_bb.numpy().astype(np.float32),
+        "Over_Segmented_Instances_count": over_seg_count.numpy().astype(np.float32),
+        "Under_Segmented_Instances_count": under_seg_count.numpy().astype(np.float32),
+        "Average_segments_num_Over_Segmented": avg_segments_over.numpy().astype(np.float32),
+        "Average_segments_num_Under_Segmented": avg_segments_under.numpy().astype(np.float32),
+        "Over_Segment_confidences": over_conf.numpy().astype(np.float32)
     }
     return res
 
