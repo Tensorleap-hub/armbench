@@ -24,11 +24,12 @@ from armbench_segmentation.utils.general_utils import get_mask_list, get_argmax_
 from armbench_segmentation.utils.ioa_utils import ioa_mask
 from armbench_segmentation.metrics import over_under_segmented_metrics
 from armbench_segmentation.utils.gcs_utils import _download
+from code_loader.inner_leap_binder.leapbinder_decorators import *
 
 
 # ----------------------------------------------------data processing--------------------------------------------------
 
-
+@tensorleap_preprocess()
 def subset_images() -> List[PreprocessResponse]:
     """
     This function returns the training and validation datasets in the format expected by tensorleap
@@ -52,11 +53,12 @@ def subset_images() -> List[PreprocessResponse]:
         # sub_size = min(len(x_raw), CONFIG[f'{sub.upper()}_SIZE'])
         idx = np.random.choice(len(x_raw), len(x_raw), replace=False)
         res.append(PreprocessResponse(length=len(x_raw), data={'cocofile': coco,
-                                                            'samples': np.take(x_raw, idx),
-                                                            'subdir': f'{sub}'}))
+                                                               'samples': np.take(x_raw, idx),
+                                                               'subdir': f'{sub}'}))
     return res
 
 
+@tensorleap_unlabeled_preprocess()
 def unlabeled_preprocessing_func() -> PreprocessResponse:
     """
     This function returns the unlabeled data split in the format expected by tensorleap
@@ -73,10 +75,11 @@ def unlabeled_preprocessing_func() -> PreprocessResponse:
     np.random.seed(0)
     test_idx = np.random.choice(len(x_test_raw), len(x_test_raw), replace=False)
     return PreprocessResponse(length=len(x_test_raw), data={'cocofile': test,
-                                                     'samples': np.take(x_test_raw, test_idx),
-                                                     'subdir': 'test'})
+                                                            'samples': np.take(x_test_raw, test_idx),
+                                                            'subdir': 'test'})
 
 
+@tensorleap_input_encoder('images')
 def input_image(idx: int, data: PreprocessResponse) -> np.ndarray:
     """
     Returns a BGR image normalized and padded
@@ -92,7 +95,7 @@ def input_image(idx: int, data: PreprocessResponse) -> np.ndarray:
     # rescale
     image = np.array(
         Image.open(local_path).resize((CONFIG['IMAGE_SIZE'][0], CONFIG['IMAGE_SIZE'][1]), Image.BILINEAR)) / 255.
-    return image
+    return image.astype(np.float32)
 
 
 def get_annotation_coco(idx: int, data: PreprocessResponse) -> np.ndarray:
@@ -103,6 +106,7 @@ def get_annotation_coco(idx: int, data: PreprocessResponse) -> np.ndarray:
     return anns
 
 
+@tensorleap_gt_encoder('masks')
 def get_masks(idx: int, data: PreprocessResponse) -> np.ndarray:
     MASK_SIZE = (160, 160)
     coco = data.data['cocofile']
@@ -113,13 +117,14 @@ def get_masks(idx: int, data: PreprocessResponse) -> np.ndarray:
         mask = coco.annToMask(ann)
         mask = cv2.resize(mask, (MASK_SIZE[0], MASK_SIZE[1]), cv2.INTER_NEAREST)
         masks[i, ...] = mask
-    return masks
+    return masks.astype(np.float32)
 
 
+@tensorleap_gt_encoder('bbs')
 def get_bbs(idx: int, data: PreprocessResponse) -> np.ndarray:
     data = data.data
     bboxes = extract_and_cache_bboxes(idx, data)
-    return bboxes
+    return bboxes.astype(np.float32)
 
 
 # ----------------------------------------------------------metadata----------------------------------------------------
@@ -309,6 +314,7 @@ def count_small_bbs(bboxes: np.ndarray) -> float:
     return float(len(areas[areas < CONFIG['SMALL_BBS_TH']]))
 
 
+@tensorleap_metadata('metadata')
 def metadata_dict(idx: int, data: PreprocessResponse) -> Dict[str, Union[float, int, str]]:
     bbs = get_bbs(idx, data)
     masks = get_masks(idx, data)
@@ -352,6 +358,7 @@ def metadata_dict(idx: int, data: PreprocessResponse) -> Dict[str, Union[float, 
     return metadatas
 
 
+@tensorleap_custom_metric('general_metrics')
 def general_metrics_dict(bb_gt: tf.Tensor, detection_pred: tf.Tensor,
                          mask_gt: tf.Tensor, segmentation_pred: tf.Tensor) -> Dict[str, tf.Tensor]:
     try:
@@ -369,6 +376,7 @@ def general_metrics_dict(bb_gt: tf.Tensor, detection_pred: tf.Tensor,
     return res
 
 
+@tensorleap_custom_metric('segmentation_metrics')
 def segmentation_metrics_dict(image: tf.Tensor, y_pred_bb: tf.Tensor, y_pred_mask: tf.Tensor, bb_gt: tf.Tensor,
                               mask_gt: tf.Tensor) -> Dict[str, Union[int, float]]:
     bs = bb_gt.shape[0]
@@ -402,13 +410,13 @@ def segmentation_metrics_dict(image: tf.Tensor, y_pred_bb: tf.Tensor, y_pred_mas
 
 # ---------------------------------------------------------binding------------------------------------------------------
 # preprocess function
-leap_binder.set_preprocess(subset_images)
+# leap_binder.set_preprocess(subset_images)
 # unlabeled data preprocess
-leap_binder.set_unlabeled_data_preprocess(function=unlabeled_preprocessing_func)
+# leap_binder.set_unlabeled_data_preprocess(function=unlabeled_preprocessing_func)
 # set input and gt
-leap_binder.set_input(input_image, 'images')
-leap_binder.set_ground_truth(get_bbs, 'bbs')
-leap_binder.set_ground_truth(get_masks, 'masks')
+# leap_binder.set_input(input_image, 'images')
+# leap_binder.set_ground_truth(get_bbs, 'bbs')
+# leap_binder.set_ground_truth(get_masks, 'masks')
 # set prediction (object)
 leap_binder.add_prediction('object detection',
                            ["x", "y", "w", "h", "obj"] +
@@ -418,24 +426,24 @@ leap_binder.add_prediction('object detection',
 # set prediction (segmentation)
 leap_binder.add_prediction('segementation masks', [f"mask_{i}" for i in range(32)])
 # set custom loss
-leap_binder.add_custom_loss(instance_seg_loss, 'instance_seg loss')
-leap_binder.add_custom_loss(dummy_loss, 'dummy_loss')
+# leap_binder.add_custom_loss(instance_seg_loss, 'instance_seg loss')
+# leap_binder.add_custom_loss(dummy_loss, 'dummy_loss')
 
 # set visualizers
-leap_binder.set_visualizer(mask_visualizer_gt, 'gt_mask', LeapDataType.ImageMask)
-leap_binder.set_visualizer(mask_visualizer_prediction, 'pred_mask', LeapDataType.ImageMask)
-leap_binder.set_visualizer(gt_bb_decoder, 'bb_gt_decoder', LeapDataType.ImageWithBBox)
-leap_binder.set_visualizer(bb_decoder, 'bb_decoder', LeapDataType.ImageWithBBox)
-leap_binder.set_visualizer(under_segmented_bb_visualizer, 'under segment', LeapDataType.ImageWithBBox)
-leap_binder.set_visualizer(over_segmented_bb_visualizer, 'over segment', LeapDataType.ImageWithBBox)
+# leap_binder.set_visualizer(mask_visualizer_gt, 'gt_mask', LeapDataType.ImageMask)
+# leap_binder.set_visualizer(mask_visualizer_prediction, 'pred_mask', LeapDataType.ImageMask)
+# leap_binder.set_visualizer(gt_bb_decoder, 'bb_gt_decoder', LeapDataType.ImageWithBBox)
+# leap_binder.set_visualizer(bb_decoder, 'bb_decoder', LeapDataType.ImageWithBBox)
+# leap_binder.set_visualizer(under_segmented_bb_visualizer, 'under segment', LeapDataType.ImageWithBBox)
+# leap_binder.set_visualizer(over_segmented_bb_visualizer, 'over segment', LeapDataType.ImageWithBBox)
 
 # set custom metrics
-leap_binder.add_custom_metric(general_metrics_dict, 'general_metrics')
-leap_binder.add_custom_metric(segmentation_metrics_dict, 'segmentation_metrics')
-leap_binder.add_custom_metric(confusion_matrix_metric, "Confusion Matrix")
+# leap_binder.add_custom_metric(general_metrics_dict, 'general_metrics')
+# leap_binder.add_custom_metric(segmentation_metrics_dict, 'segmentation_metrics')
+# leap_binder.add_custom_metric(confusion_matrix_metric, "Confusion Matrix")
 
 # set metadata
-leap_binder.set_metadata(metadata_dict, name='metadata')
+# leap_binder.set_metadata(metadata_dict, name='metadata')
 
 if __name__ == '__main__':
     leap_binder.check()

@@ -1,4 +1,3 @@
-
 from code_loader.helpers.detection.utils import xyxy_to_xywh_format
 from code_loader.helpers.detection.yolo.utils import jaccard, xywh_to_xyxy_format
 
@@ -12,6 +11,7 @@ import numpy as np
 from armbench_segmentation.config import CONFIG
 from armbench_segmentation.utils.general_utils import get_mask_list, reshape_output_list, draw_image_with_boxes
 from armbench_segmentation.yolo_helpers.yolo_utils import DEFAULT_BOXES
+from code_loader.inner_leap_binder.leapbinder_decorators import *
 
 
 def transpose_bbox_coor(boxes: Union[NDArray[np.float32], tf.Tensor]) -> Union[NDArray[np.float32], tf.Tensor]:
@@ -22,6 +22,7 @@ def transpose_bbox_coor(boxes: Union[NDArray[np.float32], tf.Tensor]) -> Union[N
     return result
 
 
+@tensorleap_custom_metric('"Confusion Matrix"')
 def confusion_matrix_metric(bb_gt: tf.Tensor, y_pred_bb: tf.Tensor):
     # assumes we get predictions in xyxy format in gt AND reg
     # assumes gt is in xywh form
@@ -45,10 +46,11 @@ def confusion_matrix_metric(bb_gt: tf.Tensor, y_pred_bb: tf.Tensor):
     for batch_i in range(len(outputs)):
         confusion_matrix_elements = []
         if len(outputs[batch_i]) != 0:
-            outs = outputs[batch_i][:, 1:5] # FIXED TOM
+            outs = outputs[batch_i][:, 1:5]  # FIXED TOM
             batch_gt_boxes = xywh_to_xyxy_format(gt_boxes[batch_i, :])
             ious = jaccard(outs,
-                           tf.cast(batch_gt_boxes, tf.double)).numpy()  # (#bb_predicted,#gt) expects bboxes in xyxy format
+                           tf.cast(batch_gt_boxes,
+                                   tf.double)).numpy()  # (#bb_predicted,#gt) expects bboxes in xyxy format
             prediction_detected = np.any((ious > threshold), axis=1)
             max_iou_ind = np.argmax(ious, axis=1)
             for i, prediction in enumerate(prediction_detected):
