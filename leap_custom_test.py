@@ -15,7 +15,7 @@ from leap_binder import (
     subset_images, input_image, get_bbs, get_masks, get_cat_instances_seg_lst, general_metrics_dict,
     segmentation_metrics_dict, metadata_dict, unlabeled_preprocessing_func, instance_seg_loss
 )
-
+from code_loader import visualize
 
 def check_integration():
     model_path = 'model/yolov5.h5'
@@ -69,6 +69,7 @@ def check_integration():
     gt_mask_visualizer_img = mask_visualizer_gt(images[0],
                                                 y_true_bbs[0, ...].numpy().astype(np.float32),
                                                 y_true_masks[0, ...].numpy().astype(np.float32))
+    visualize(gt_mask_visualizer_img)
     predicted_mask_visualizer_img = mask_visualizer_prediction(
         images[0],
         y_pred_bbs[0, ...].numpy().astype(np.float32),
