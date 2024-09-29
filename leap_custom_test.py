@@ -15,7 +15,9 @@ from leap_binder import (
     subset_images, input_image, get_bbs, get_masks, get_cat_instances_seg_lst, general_metrics_dict,
     segmentation_metrics_dict, metadata_dict, unlabeled_preprocessing_func, instance_seg_loss
 )
+
 from code_loader.helpers import visualize
+
 
 def check_integration():
     model_path = 'model/yolov5.h5'

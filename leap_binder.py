@@ -89,6 +89,7 @@ def input_image(idx: int, data: PreprocessResponse) -> np.ndarray:
 
     if CONFIG['LOCAL_FLAG'] is False:
         remote_filepath = os.path.join(CONFIG['remote_dir'], "images", x['file_name'])
+
         local_path = _download(remote_filepath)
     else:
         local_path = os.path.join(local_filepath, "images", x['file_name'])

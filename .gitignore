@@ -5,7 +5,6 @@ __pycache__/
 .python-version
 *secret.json
 *.h5
-requirements.txt
 *.gz
 examples/imdb/aclImdb/
 examples/coco/coco/coco_data/
