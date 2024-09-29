@@ -14,13 +14,13 @@ def bb_decoder(image, bb_prediction):
     Overlays the BB predictions on the image
     """
     bb_object, _ = get_mask_list(bb_prediction, None, is_gt=False)
-    return LeapImageWithBBox((image * 255).astype(np.float32), bb_object)
+    return LeapImageWithBBox((image * 255).astype(np.uint8), bb_object)
 
 
 @tensorleap_custom_visualizer('bb_gt_decoder', LeapDataType.ImageWithBBox)
 def gt_bb_decoder(image, bb_gt) -> LeapImageWithBBox:
     bb_object, _ = get_mask_list(bb_gt, None, is_gt=True)
-    return LeapImageWithBBox((image * 255).astype(np.float32), bb_object)
+    return LeapImageWithBBox((image * 255).astype(np.uint8), bb_object)
 
 @tensorleap_custom_visualizer('under segment', LeapDataType.ImageWithBBox)
 def under_segmented_bb_visualizer(image, y_pred_bb, y_pred_mask, bb_gt, mask_gt):  # bb_visualizer + gt_visualizer
@@ -35,7 +35,7 @@ def under_segmented_bb_visualizer(image, y_pred_bb, y_pred_mask, bb_gt, mask_gt)
     bb_gt_object, _ = get_mask_list(bb_gt, None, is_gt=True)
     new_gt_objects = remove_label_from_bbs(bb_gt_object, "Tote", "gt")
     new_bb_array = [new_gt_objects[i] for i in relevant_gts] + [new_bb_pred_object[i] for i in relevant_bbs]
-    return LeapImageWithBBox((image * 255).astype(np.float32), new_bb_array)
+    return LeapImageWithBBox((image * 255).astype(np.uint8), new_bb_array)
 
 
 @tensorleap_custom_visualizer('over segment', LeapDataType.ImageWithBBox)
@@ -51,4 +51,4 @@ def over_segmented_bb_visualizer(image, y_pred_bb, y_pred_mask, bb_gt, mask_gt):
     bb_gt_object, _ = get_mask_list(bb_gt, None, is_gt=True)
     new_gt_objects = remove_label_from_bbs(bb_gt_object, "Tote", "gt")
     new_bb_array = [new_gt_objects[i] for i in relevant_gts] + [new_bb_pred_object[i] for i in relevant_bbs]
-    return LeapImageWithBBox((image * 255).astype(np.float32), new_bb_array)
+    return LeapImageWithBBox((image * 255).astype(np.uint8), new_bb_array)

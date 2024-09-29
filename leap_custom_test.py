@@ -15,7 +15,9 @@ from leap_binder import (
     subset_images, input_image, get_bbs, get_masks, get_cat_instances_seg_lst, general_metrics_dict,
     segmentation_metrics_dict, metadata_dict, unlabeled_preprocessing_func, instance_seg_loss
 )
-from code_loader import visualize
+
+from code_loader.helpers import visualize
+
 
 def check_integration():
     model_path = 'model/yolov5.h5'
@@ -74,14 +76,19 @@ def check_integration():
         images[0],
         y_pred_bbs[0, ...].numpy().astype(np.float32),
         y_pred_masks[0, ...].numpy().astype(np.float32))
+    visualize(predicted_mask_visualizer_img)
     predicted_bboxes_img = bb_decoder(images[0], y_pred_bbs[0, ...].numpy().astype(np.float32))
-    draw_image_with_boxes(image=predicted_bboxes_img.data / 255, bounding_boxes=predicted_bboxes_img.bounding_boxes)
+    #draw_image_with_boxes(image=predicted_bboxes_img.data / 255, bounding_boxes=predicted_bboxes_img.bounding_boxes)
+    visualize(predicted_bboxes_img)
     gt_bboxes_img = gt_bb_decoder(images[0], y_true_bbs[0, ...].numpy().astype(np.float32))
-    draw_image_with_boxes(image=gt_bboxes_img.data / 255, bounding_boxes=gt_bboxes_img.bounding_boxes)
+    #draw_image_with_boxes(image=gt_bboxes_img.data / 255, bounding_boxes=gt_bboxes_img.bounding_boxes)
+    visualize(gt_bboxes_img)
     under_segmented_img = under_segmented_bb_visualizer(images[0], y_pred_bbs[0, ...].numpy().astype(np.float32), y_pred_masks[0, ...].numpy().astype(np.float32),
                                                         y_true_bbs[0, ...].numpy().astype(np.float32), y_true_masks[0, ...].numpy().astype(np.float32))
+    visualize(under_segmented_img)
     over_segmented_img = over_segmented_bb_visualizer(images[0], y_pred_bbs[0, ...].numpy().astype(np.float32), y_pred_masks[0, ...].numpy().astype(np.float32),
                                                       y_true_bbs[0, ...].numpy().astype(np.float32), y_true_masks[0, ...].numpy().astype(np.float32))
+    visualize(over_segmented_img)
     # metadata functions
     metadata = metadata_dict(idx, training_response)
 

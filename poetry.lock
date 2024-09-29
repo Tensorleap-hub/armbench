@@ -167,13 +167,14 @@ requests = ">=2.32.3,<3.0.0"
 
 [[package]]
 name = "code-loader-helpers"
-version = "1.0.12"
+version = "1.0.13"
+
 description = ""
 optional = false
 python-versions = "<3.11,>=3.8"
 files = [
-    {file = "code_loader_helpers-1.0.12-py3-none-any.whl", hash = "sha256:6956025ee3f317311af1a11e581e283bb86876321e3858a3ad3d3719736e8eca"},
-    {file = "code_loader_helpers-1.0.12.tar.gz", hash = "sha256:30d1121fc22cdb8d9d459e6c13852b52fb3a16a97f0fef2465bbe9d9629c8668"},
+    {file = "code_loader_helpers-1.0.13-py3-none-any.whl", hash = "sha256:b8057e275af7e4577addfc48a26b163c88048da2c68d25e14f2c8d5f0a917599"},
+    {file = "code_loader_helpers-1.0.13.tar.gz", hash = "sha256:ec9c824160375ed5dcd8634c214592701cba562f0a839a2e5af442ba4e480738"},
 ]
 
 [package.dependencies]
@@ -1910,4 +1911,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.11"
-content-hash = "0800a9f69ec877a98fa38ae8df2eb8f2a2d7a035966ee44a7b05f839954b70bf"
+content-hash = "c651e4ac98f41094996b0dc168787cd6e559e8c40d98f4c240b7895af421020e"
